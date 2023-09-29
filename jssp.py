@@ -3,47 +3,147 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
+from pyomo.opt import ProblemFormat
+import random
+import numpy as np
+import time
+import pickle
+
+def save_model(model, filename):
+    with open(filename, 'wb') as file:
+        pickle.dump(model, file)
+
+def load_model(filename):
+    with open(filename, 'rb') as file:
+        return pickle.load(file)
+
+random.seed(12345)
+
+# workers_data = {
+#         1: "Токарно-винторезная",
+#         2: "Слесарная",
+#         3: "Вертикально-сверлильная",
+#         4: "Токарная с ЧПУ",
+#         5: "Токарно-винторезная",
+#         6: "Слесарная",
+#         7: "Вертикально-сверлильная",
+#         8: "Токарная с ЧПУ",
+#         9: "Токарно-винторезная",
+#         10: "Слесарная",
+#         11: "Вертикально-сверлильная",
+#         12: "Токарная с ЧПУ",
+#         13: "Токарно-винторезная",
+#         14: "Слесарная",
+#         15: "Вертикально-сверлильная",
+#         16: "Токарная с ЧПУ",
+#     }
 
 
-workers_data = {
-        1: "Токарно-винторезная",
-        2: "Слесарная",
-        3: "Вертикально-сверлильная",
-        4: "Токарная с ЧПУ",
-        5: "Токарно-винторезная",
-        6: "Слесарная",
-        7: "Вертикально-сверлильная",
-        8: "Токарная с ЧПУ",
-    }
+# jobs_data = {
+#         15: ("Токарно-винторезная", 5, []),
+#         25: ("Токарная с ЧПУ", 15, [15]),
+#         35: ("Токарная с ЧПУ", 20, [25]),
+#         45: ("Вертикально-сверлильная", 10, [35]),
+#         55: ("Слесарная", 50, [45]),
+#         100: ("Токарно-винторезная", 10, []),
+#         110: ("Слесарная", 25, [100]),
+#         120: ("Токарно-винторезная", 35, []),
+#         130: ("Слесарная", 30, [120]),
+#         140: ("Токарная с ЧПУ", 5, [130]),
+#         150: ("Вертикально-сверлильная", 10, [140]),
+#     }
 
-jobs_data = {
-        15: ("Токарно-винторезная", 3, []),
-        25: ("Токарная с ЧПУ", 5, [15]),
-        35: ("Токарная с ЧПУ", 1, [25]),
-        45: ("Вертикально-сверлильная", 7, [35]),
-        55: ("Слесарная", 4, [45]),
-        100: ("Токарно-винторезная", 2, []),
-        110: ("Слесарная", 7, [100]),
-        120: ("Токарно-винторезная", 5, []),
-        130: ("Слесарная", 3, [120]),
-        140: ("Токарная с ЧПУ", 2, [130]),
-        150: ("Вертикально-сверлильная", 4, [140]),
-    }
+# project_data = {
+#         1: [15, 25, 35, 45, 55],
+#         2: [100, 110],
+#         3: [120, 130, 140, 150]
+#     }
 
-project_data = {
-        1: [15, 25, 35, 45, 55],
-        2: [100, 110],
-        3: [120, 130, 140, 150]
-    }
 
-shifts_data = {
-        1: (0, 8),
-        2: (8, 16),
-        3: (16, 24)
-    }
+
+# 1. Генерация рабочих
+workers_data = {}
+specializations = ["Токарно-винторезная", "Слесарная", "Вертикально-сверлильная", "Токарная с ЧПУ"]
+num_workers = 10
+
+# Рассчитываем, сколько рабочих каждой специальности нам нужно
+workers_per_specialization = num_workers // len(specializations)
+
+for worker_id in range(1, num_workers + 1):
+    # Находим специализацию на основе текущего worker_id
+    spec_index = (worker_id - 1) % len(specializations)
+    workers_data[worker_id] = specializations[spec_index]
+
+
+# 2. Генерация работ
+jobs_data = {}
+num_jobs = 20
+
+# Рассчитываем, сколько задач с каждой специализацией нам нужно
+jobs_per_specialization = num_jobs // len(specializations)
+
+for job_id in range(1, num_jobs + 1):
+    # Находим специализацию на основе текущего job_id
+    spec_index = min((job_id - 1) // jobs_per_specialization, len(specializations) - 1)
+    job_duration = random.randint(5, 60)
+    jobs_data[job_id] = (specializations[spec_index], job_duration, [])
+
+
+# 3. Генерация проектов и добавление предшественников к работам в проекте
+project_data = {}
+job_id = 1
+project_counter = 1
+
+while job_id <= num_jobs:
+    project_size = random.randint(2, 5)  # Случайный размер проекта между 2 и 5
+    current_project_jobs = list(range(job_id, min(job_id + project_size, num_jobs + 1)))
+    
+    project_data[project_counter] = current_project_jobs
+    project_counter += 1
+    
+    # Добавление предшественников для задач в текущем проекте
+    for idx, j_id in enumerate(current_project_jobs):
+        if idx > 0:  # Если это не первая задача в проекте
+            jobs_data[j_id] = (jobs_data[j_id][0], jobs_data[j_id][1], [j_id-1])
+            
+    job_id += len(current_project_jobs)
+
+
+# Счетчик для специализаций среди рабочих
+worker_specializations_count = {spec: 0 for spec in specializations}
+for specialization in workers_data.values():
+    worker_specializations_count[specialization] += 1
+
+# Счетчик для требуемых специализаций среди задач
+job_specializations_count = {spec: 0 for spec in specializations}
+for specialization, _, _ in jobs_data.values():
+    job_specializations_count[specialization] += 1
+
+print("Специализации рабочих:")
+for spec, count in worker_specializations_count.items():
+    print(f"{spec}: {count}")
+
+print("\nТребуемые специализации для задач:")
+for spec, count in job_specializations_count.items():
+    print(f"{spec}: {count}")
+
+
+# print(workers_data)
+# print(jobs_data)
+# print(project_data)
+# Обновляем словарь task_to_project
+
+
 
 task_to_project = {j: p for p, job_list in project_data.items() for j in job_list}
-def build_and_solve(worker_weight):
+for j in jobs_data.keys():
+    if j not in task_to_project:
+        print(f"Job {j} is not assigned to any project!")
+
+# print(task_to_project)
+def build_and_solve(weight_balance, weight_makespan):
+    start_time = time.time()
+
     model = ConcreteModel()
 
     
@@ -54,9 +154,8 @@ def build_and_solve(worker_weight):
 
 
     # Sets
-    model.workers = Set(initialize=workers_data.keys())
-    model.jobs = Set(initialize=jobs_data.keys())
-    model.shifts = Set(initialize=shifts_data.keys())
+    model.workers = Set(initialize=list(workers_data.keys()))
+    model.jobs = Set(initialize=list(jobs_data.keys()))
 
     # Parameters
     model.specialization = Param(model.workers, initialize=workers_data)
@@ -67,8 +166,6 @@ def build_and_solve(worker_weight):
     
     model.task_to_project = Param(model.jobs, initialize=task_to_project)
 
-    model.shift_start = Param(model.shifts, initialize={k: v[0] for k, v in shifts_data.items()})
-    model.shift_end = Param(model.shifts, initialize={k: v[1] for k, v in shifts_data.items()})
 
 
     # Variables
@@ -81,9 +178,8 @@ def build_and_solve(worker_weight):
     model.y = Var(model.jobs, model.jobs, model.workers, within=Binary) # вспомогательная бинарная переменная для реализации ограничения неперекрытия
 
     model.worker_used = Var(model.workers, domain=Binary)
-    model.worker_shift = Var(model.workers, model.shifts, domain=Binary)
-
-    # model.overlap = Var(model.jobs, model.jobs, model.workers, domain=Binary)
+    model.max_work_time = Var(domain=NonNegativeReals)
+    model.min_work_time = Var(domain=NonNegativeReals)
 
 
     bigM = sum(model.job_duration.values())
@@ -91,12 +187,14 @@ def build_and_solve(worker_weight):
 
     # Objective (You may need to specify the objective depending on your specific requirements)
     # model.obj = Objective(expr=model.makespan, sense=minimize)
-    idle_time_weight = 1  # Вы можете регулировать этот вес, чтобы достигнуть баланса между минимизацией простоя и максимальным временем завершения
-    # model.obj = Objective(expr=model.makespan + sum(model.idle_time_between_tasks[i, j, k] for i in model.jobs for j in model.jobs for k in model.workers), sense=minimize)
-    # model.obj = Objective(expr=sum(model.start_time[j] + model.end_time[j] for j in model.jobs), sense=minimize)
-    # model.obj = Objective(expr=sum(model.start_time[j] for j in model.jobs), sense=minimize)
+    # model.obj = Objective(expr=model.max_work_time - model.min_work_time, sense=minimize)
+    # model.obj = Objective(expr=weight_balance * (model.max_work_time - model.min_work_time) + 
+    #                          weight_makespan * model.makespan, sense=minimize)
+    model.obj = Objective(expr=weight_balance * (model.max_work_time - model.min_work_time) + 
+                      weight_makespan * sum(model.end_time[j] for j in model.jobs), sense=minimize)
+
     # worker_weight = 1000  # Чем выше этот вес, тем более предпочтительным становится минимизировать число рабочих
-    model.obj = Objective(expr=sum(model.start_time[j] for j in model.jobs) + worker_weight * sum(model.worker_used[k] for k in model.workers), sense=minimize)
+    # model.obj = Objective(expr=sum(model.start_time[j] for j in model.jobs) + worker_weight * sum(model.worker_used[k] for k in model.workers), sense=minimize)
 
 
     # Constraints
@@ -106,14 +204,6 @@ def build_and_solve(worker_weight):
     def general_precedence_rule(model, i):
         return model.start_time[i] >= sum(model.end_time[j] for j in model.predecessors[i])
     model.general_precedence_constraint = Constraint(model.jobs, rule=general_precedence_rule)
-
-    # вычисляет время простоя между двумя задачами для рабочего
-    # def idle_time_between_tasks_rule(model, i, j, k):
-    #     if i != j:
-    #         return model.idle_time_between_tasks[i, j, k] >= model.start_time[j] - model.end_time[i] - bigM * (1 - model.worker_assigned[i, k]) - bigM * (1 - model.worker_assigned[j, k])
-    #     return Constraint.Skip
-
-    # model.idle_time_between_tasks_constraint = Constraint(model.jobs, model.jobs, model.workers, rule=idle_time_between_tasks_rule)
 
     # если рабочий используется хотя бы для одной работы, то его переменная worker_used равна 1
     def worker_usage_rule(model, i, k):
@@ -149,16 +239,6 @@ def build_and_solve(worker_weight):
         return model.idle_time[k] == model.makespan - total_assigned_time
     model.idle_time_constraint = Constraint(model.workers, rule=idle_time_rule)
 
-    # # минимизирует время простоя между задачами для рабочего
-    # def minimized_idle_rule(model, i, j, k):
-    #     if i != j:
-    #         # If job i is assigned to worker k and starts after job j
-    #         idle_time = model.start_time[i] - (model.start_time[j] + model.job_duration[j])
-    #         return idle_time <= bigM * (1 - model.worker_assigned[i, k]) + bigM * (1 - model.worker_assigned[j, k])
-    #     return Constraint.Skip
-
-    # model.minimized_idle_constraint = Constraint(model.jobs, model.jobs, model.workers, rule=minimized_idle_rule)
-
     # устанавливает, что все задачи должны завершиться до общего времени завершения
     def makespan_rule(model, i):
         return model.end_time[i] <= model.makespan
@@ -177,44 +257,29 @@ def build_and_solve(worker_weight):
         return sum(model.worker_assigned[i, k] for k in model.workers) == 1
     model.job_assignment_constraint = Constraint(model.jobs, rule=job_assignment_rule)
 
-    M = 24  # Например, если у вас время в часах и оно может быть от 0 до 24
+    def worker_time_limit_rule(model, k):
+        return sum(model.job_duration[i] * model.worker_assigned[i, k] for i in model.jobs) <= 8*60
+    model.worker_time_limit = Constraint(model.workers, rule=worker_time_limit_rule)
 
-    # def work_time_start_rule(model, i, k, s):
-    #     return model.start_time[i] - model.shift_start[s] >= -M * (1 - model.worker_assigned[i, k])
+    def max_work_time_rule(model, k):
+        return model.max_work_time >= sum(model.job_duration[j] * model.worker_assigned[j, k] for j in model.jobs)
+    model.max_work_time_constraint = Constraint(model.workers, rule=max_work_time_rule)
 
-    # def work_time_end_rule(model, i, k, s):
-    #     return model.end_time[i] - model.shift_start[s] >= -M * (1 - model.worker_assigned[i, k])
+    def min_work_time_rule(model, k):
+        return model.min_work_time <= sum(model.job_duration[j] * model.worker_assigned[j, k] for j in model.jobs)
+    model.min_work_time_constraint = Constraint(model.workers, rule=min_work_time_rule)
 
-
-    # model.work_time_start_constraint = Constraint(model.jobs, model.workers, model.shifts, rule=work_time_start_rule)
-    # model.work_time_end_constraint = Constraint(model.jobs, model.workers, model.shifts, rule=work_time_end_rule)
-
-
-    # Если рабочий назначен на задачу во время смены, то он также должен быть назначен на эту смену
-    def worker_shift_assignment_rule(model, k, s):
-        problematic_indices = [i for i in model.jobs if model.start_time[i].value is None or model.end_time[i].value is None]
-        if problematic_indices:
-            print(f"Problematic indices for start_time or end_time: {problematic_indices}")
-        
-        return sum(
-            model.worker_assigned[i, k] for i in model.jobs 
-            if model.start_time[i].value is not None and model.end_time[i].value is not None and 
-            model.start_time[i].value >= model.shift_start[s] and 
-            model.end_time[i].value <= model.shift_end[s]
-        ) <= bigM * model.worker_shift[k, s]
-
-    model.worker_shift_assignment_constraint = Constraint(model.workers, model.shifts, rule=worker_shift_assignment_rule)
-
-
-
-
+    model.write(filename='model.mps', format=ProblemFormat.mps)
     # Solve the model
-    solver = SolverFactory('cbc')
-    solver.solve(model)
-    result = solver.solve(model)
-    print(solver.solve(model, tee=True))
+    solver = SolverFactory('scip')
+    solver.options['threads'] = 6
+    result = solver.solve(model, tee=True)
+    print('Model Solved')
     print("Solver Status:", result.solver.status)
     print("Solver Termination Condition:", result.solver.termination_condition)
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+
 
 
 
@@ -236,27 +301,38 @@ def build_and_solve(worker_weight):
             if model.worker_assigned[i, k].value > 0.5:  # Проверяем назначен ли рабочий на задачу
                 print(f"Job {i} is assigned to worker {k} at start time {model.start_time[i].value} and end time {model.end_time[i].value}")
 
-    print("\nShift assignments:")
+
+    # print("\nWorker Idle Times:")
+    # for k in model.workers:
+    #     print(f"Worker {k} idle time: {model.idle_time[k].value}")
+
     for k in model.workers:
-        for s in model.shifts:
-            if model.worker_shift[k, s].value > 0.5:  # Проверяем назначен ли рабочий на смену
-                print(f"Worker {k} is assigned to shift {s} starting at {model.shift_start[s]} and ending at {model.shift_end[s]}")
+        assigned_jobs_count = sum(model.worker_assigned[j, k].value for j in model.jobs)
+        total_minutes = sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs)
+        hours = total_minutes // 60
+        minutes = total_minutes % 60
+        print(f"Worker {k} ({workers_data[k]}) worked for total time: {hours}h {minutes}m and has {int(assigned_jobs_count)} tasks assigned.")
 
-    print("\nJobs during shifts:")
-    for i in model.jobs:
-        for s in model.shifts:
-            if model.start_time[i].value >= model.shift_start[s] and model.end_time[i].value <= model.shift_end[s]:
-                print(f"Job {i} occurs during shift {s}")
+    # Список времени работы для каждого рабочего
+    worker_times = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
 
-    print("\nWorker Idle Times:")
-    for k in model.workers:
-        print(f"Worker {k} idle time: {model.idle_time[k].value}")
+    # Вычисляем среднее время работы
+    average_work_time = sum(worker_times) / len(model.workers)
 
+    # Вычисляем стандартное отклонение
+    variance = sum((time - average_work_time) ** 2 for time in worker_times) / len(model.workers)
+    std_deviation = variance ** 0.5
+
+    # Конвертируем стандартное отклонение в часы и минуты
+    std_hours = int(std_deviation // 60)
+    std_minutes = int(std_deviation % 60)
+
+    print(f"\nСтандартное отклонение времени работы рабочего: {std_hours}h {std_minutes}m")
 
     final_end_time = max(model.end_time[j].value for j in model.jobs)
 
     print(f"\nFinal End Time of Last Job: {final_end_time}")
-
+    print(f"Total execution time: {elapsed_time:.2f} seconds")
 
     # If you wish to see the complete status and log of the solver
     # print(solver.solve(model, tee=True))
@@ -268,6 +344,8 @@ def plot_schedule(model, title):
     tasks = []
     starts = []
     ends = []
+    
+    colors = plt.cm.viridis(np.linspace(0, 1, len(project_data)))
 
     for j in model.jobs:
         for k in model.workers:
@@ -276,42 +354,32 @@ def plot_schedule(model, title):
                 starts.append(model.start_time[j].value)
                 ends.append(model.start_time[j].value + jobs_data[j][1])
 
-    colors = {
-        1: "red",
-        2: "blue",
-        3: "green",
-        4: "yellow",
-        5: "purple",
-        6: "cyan",
-        7: "orange",
-        8: "pink"
-    }
+    fig, ax = plt.subplots(figsize=(10, len(model.workers) * 0.6))  # уменьшим высоту каждого рабочего для лучшего масштабирования
 
-    fig, ax = plt.subplots(figsize=(10, len(model.workers) * 3))
-
-    # Для каждого рабочего рисуем задачи, назначенные ему
     for idx, k in enumerate(model.workers):
         assigned_jobs = [(j, model.start_time[j].value, model.start_time[j].value + jobs_data[j][1]) for j in model.jobs if model.worker_assigned[j, k].value > 0.5]
         sorted_jobs = sorted(assigned_jobs, key=lambda x: x[1])
         for job in sorted_jobs:
             project_id = task_to_project[job[0]]
-            ax.broken_barh([(job[1], job[2] - job[1])], (idx*3, 2), facecolors=(colors[project_id]))
+            ax.broken_barh([(job[1], job[2] - job[1])], (idx*0.6, 0.5), facecolors=(colors[project_id % len(colors)]))
             duration = jobs_data[job[0]][1]
             job_name = jobs_data[job[0]][0]
-            ax.text((2*job[1] + duration) / 2, idx*3 + 1, f"{job_name} ({duration}h)", ha='center', va='center', color='white')
+            ax.text((2*job[1] + duration) / 2, idx*0.6 + 0.25, f"{job_name} ({duration}m)", ha='center', va='center', color='white', fontsize=6)
 
     ax.set_xlabel('Time')
     ax.set_ylabel('Workers')
-    ax.set_yticks([idx*3 + 1 for idx in range(len(model.workers))])
-    ax.set_yticklabels([f"Worker {k}" for k in model.workers])
+    ax.set_yticks([idx*0.6 + 0.25 for idx in range(len(model.workers))])
+    ax.set_yticklabels([f"Worker {k}" for k in model.workers], fontsize=8)
     ax.grid(True)
 
-    legend_elements = [Patch(facecolor=colors[i], edgecolor='gray', label=f'Project {i}') for i in project_data.keys()]
+    legend_elements = [Patch(facecolor=colors[i % len(colors)], edgecolor='gray', label=f'Project {i}') for i in project_data.keys()]
     ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1))
 
     ax.set_title(title)
     plt.tight_layout()
     plt.show()
+
+
 
 
 
@@ -370,9 +438,19 @@ def plot_combined_schedule(model1, model2, title1="First Model", title2="Second 
 
 
 
-model_1000 = build_and_solve(1000)
-plot_schedule(model_1000, "Schedule with worker_weight = 1000")
+# model_1000 = build_and_solve(1000)
+# plot_schedule(model_1000, "Schedule with worker_weight = 1000")
 
-model_minus_1 = build_and_solve(-1)
-plot_schedule(model_minus_1, "Schedule with worker_weight = -1")
+model11 = build_and_solve(1,1)
+
 # plot_combined_schedule(model_1000, model_minus_1, "worker_weight = 1000", "worker_weight = -1")
+
+# model_minus_1.pprint()
+
+# save_model(model_minus_1, 'my_saved_model.pkl')
+# loaded_model = load_model('my_saved_model.pkl')
+plot_schedule(model11, "Schedule")
+
+# TODO разряды рабочих и влияние на временной норматив операции. 
+# график зависимости норматива от разряда линейный, сменный план по умолчанию. 
+# возможность учета сразу нескольких смен в расписании потребует ввод доп ограничений: график рабочих, межсменная задача, станки учет
