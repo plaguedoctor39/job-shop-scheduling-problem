@@ -140,7 +140,7 @@ for j in jobs_data.keys():
         print(f"Job {j} is not assigned to any project!")
 
 # print(task_to_project)
-def build_and_solve(weight_balance, weight_makespan):
+def build_model(weight_balance, weight_makespan):
     start_time = time.time()
 
     model = ConcreteModel()
@@ -269,10 +269,18 @@ def build_and_solve(weight_balance, weight_makespan):
     model.min_work_time_constraint = Constraint(model.workers, rule=min_work_time_rule)
 
     model.write(filename='model.mps', format=ProblemFormat.mps)
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Build execution time: {elapsed_time:.2f} seconds")
+    
+    return model
+
+def solve_model(model):
     # Solve the model
+    start_time = time.time()
     solver = SolverFactory('scip')
     solver.options['threads'] = 6
-    result = solver.solve(model, tee=True)
+    result = solver.solve(model)
     print('Model Solved')
     print("Solver Status:", result.solver.status)
     print("Solver Termination Condition:", result.solver.termination_condition)
@@ -331,12 +339,12 @@ def build_and_solve(weight_balance, weight_makespan):
     final_end_time = max(model.end_time[j].value for j in model.jobs)
 
     print(f"\nFinal End Time of Last Job: {final_end_time}")
-    print(f"Total execution time: {elapsed_time:.2f} seconds")
+    print(f"Solve execution time: {elapsed_time:.2f} seconds")
+    objective_value = model.obj.expr()
+    print(f"Value of the objective function: {objective_value}")
 
     # If you wish to see the complete status and log of the solver
     # print(solver.solve(model, tee=True))
-    return model
-
 
 
 def plot_schedule(model, title):
@@ -433,6 +441,75 @@ def plot_combined_schedule(model1, model2, title1="First Model", title2="Second 
     plt.show()
 
 
+def plot_worker_load(model):
+    worker_names = [f"Worker {k} ({workers_data[k]})" for k in model.workers]
+    tasks_counts = [sum(model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
+    total_times = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
+
+    # Convert total times from minutes to hours for plotting
+    total_hours = [t / 60 for t in total_times]
+
+    # Create subplots with 2 y-axes
+    fig, ax1 = plt.subplots(figsize=(15, 6))  # Увеличиваем размер фигуры
+    ax2 = ax1.twinx()
+
+    # Plot total hours on the first y-axis
+    ax1.bar(worker_names, total_hours, color='b', alpha=0.6, label='Total hours worked')
+    ax1.set_ylabel('Total hours worked', color='b')
+    ax1.tick_params(axis='y', labelcolor='b')
+    ax1.set_xticklabels(worker_names, rotation=45, ha='right')  # Поворачиваем метки x-оси
+
+    # Plot tasks counts on the second y-axis
+    ax2.plot(worker_names, tasks_counts, color='r', marker='o', label='Tasks assigned', linestyle='--')
+    ax2.set_ylabel('Tasks assigned', color='r')
+    ax2.tick_params(axis='y', labelcolor='r')
+
+    # Setting the title and showing the plot
+    ax1.set_title('Workers Load')
+    fig.tight_layout()
+    plt.show()
+
+
+
+def plot_worker_utilization(model):
+    title = "Worker Utilization and Assigned Jobs"
+    worker_names = [f"Worker {k}" for k in model.workers]
+    total_minutes = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
+    assigned_jobs_counts = [sum(model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
+    max_time = 480  # 8 hours in minutes
+    utilization_percentage = [(time_spent/max_time)*100 for time_spent in total_minutes]
+
+    fig, ax1 = plt.subplots(figsize=(12, 6))
+
+    # Bar plot for total working time
+    bars = ax1.bar(worker_names, total_minutes, color='blue', label='Total Working Time (min)', alpha=0.6)
+    ax1.set_ylabel('Total Working Time (min)', color='blue')
+    ax1.set_ylim(0, max_time + 50)
+    ax1.axhline(max_time, color="red", linestyle="--", label="Max Available Time")
+    ax1.set_xticklabels(worker_names, rotation=45, ha='right')  # Поворачиваем метки x-оси
+
+    # Displaying utilization percentage on the bars
+    for idx, (util, bar) in enumerate(zip(utilization_percentage, bars)):
+        height = bar.get_height()
+        ax1.text(bar.get_x() + bar.get_width() / 2, height + 5, f"{util:.2f}%", ha='center', color='black', fontsize=9)
+    
+    # Plotting total assigned jobs on the right y-axis
+    ax2 = ax1.twinx()
+    ax2.plot(worker_names, assigned_jobs_counts, color='green', marker='o', label='Assigned Jobs Count', linestyle='--')
+    ax2.set_ylabel('Number of Assigned Jobs', color='green')
+    for i, txt in enumerate(assigned_jobs_counts):
+        ax2.annotate(txt, (worker_names[i], assigned_jobs_counts[i] + 0.5), color='green', ha='center')
+
+    # Legends and titles
+    fig.tight_layout()
+    fig.legend(loc="upper left", bbox_to_anchor=(0.05, 1))
+    ax1.set_title(title)
+
+    plt.show()
+
+
+
+
 
 
 
@@ -440,15 +517,41 @@ def plot_combined_schedule(model1, model2, title1="First Model", title2="Second 
 # model_1000 = build_and_solve(1000)
 # plot_schedule(model_1000, "Schedule with worker_weight = 1000")
 
-model11 = build_and_solve(1,1)
+model11 = build_model(1,1)
+solve_model(model11)
+# model11.start_time[6].set_value(120)
+# model11.start_time[6].fix()
+# solve_model(model11)
+with open("solution_output.txt", "w") as file:
 
-# plot_combined_schedule(model_1000, model_minus_1, "worker_weight = 1000", "worker_weight = -1")
+    # Запись значений переменных
+    for v in model11.component_objects(Var, active=True):
+        file.write(f"Variable {v}\n")
+        varobject = getattr(model11, str(v))
+        for index in varobject:
+            file.write(f"   {index} {varobject[index].value}\n")
 
-# model_minus_1.pprint()
+    # Запись значения целевой функции
+    for o in model11.component_objects(Objective, active=True):
+        file.write(f"Objective {o} value: {value(o)}\n")
 
-# save_model(model_minus_1, 'my_saved_model.pkl')
-# loaded_model = load_model('my_saved_model.pkl')
-plot_schedule(model11, "Schedule")
+def exclude_solution(model):
+    current_solution = [(j, k) for j in model.jobs for k in model.workers if model.worker_assigned[j, k].value > 0.5]
+    
+    num_constraints = sum(1 for _ in model.component_objects(Constraint, active=True))
+    model.add_component(
+        f"exclude_solution_{num_constraints + 1}", 
+        Constraint(expr=sum(model.worker_assigned[j, k] for j, k in current_solution) <= len(current_solution) - 1))
+
+num_solutions = 30
+for i in range(num_solutions):
+    solve_model(model11)
+    print("Solution", i+1)
+    
+    exclude_solution(model11)
+
+# plot_worker_load(model11)
+plot_worker_utilization(model11)
 
 # TODO разряды рабочих и влияние на временной норматив операции. 
 # график зависимости норматива от разряда линейный, сменный план по умолчанию. 
