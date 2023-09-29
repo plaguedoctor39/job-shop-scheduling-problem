@@ -131,7 +131,6 @@ for spec, count in job_specializations_count.items():
 # print(workers_data)
 # print(jobs_data)
 # print(project_data)
-# Обновляем словарь task_to_project
 
 
 
