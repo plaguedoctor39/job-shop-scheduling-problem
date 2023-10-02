@@ -139,14 +139,13 @@ for j in jobs_data.keys():
     if j not in task_to_project:
         print(f"Job {j} is not assigned to any project!")
 
-# print(task_to_project)
 def build_model(weight_balance, weight_makespan):
     start_time = time.time()
 
     model = ConcreteModel()
 
     
-
+    print(type(model))
     def are_unrelated(i, j):
         """Возвращает True, если задачи i и j относятся к разным проектам."""
         return model.task_to_project[i] != model.task_to_project[j]
@@ -186,14 +185,9 @@ def build_model(weight_balance, weight_makespan):
 
     # Objective (You may need to specify the objective depending on your specific requirements)
     # model.obj = Objective(expr=model.makespan, sense=minimize)
-    # model.obj = Objective(expr=model.max_work_time - model.min_work_time, sense=minimize)
-    # model.obj = Objective(expr=weight_balance * (model.max_work_time - model.min_work_time) + 
-    #                          weight_makespan * model.makespan, sense=minimize)
     model.obj = Objective(expr=weight_balance * (model.max_work_time - model.min_work_time) + 
                       weight_makespan * sum(model.end_time[j] for j in model.jobs), sense=minimize)
 
-    # worker_weight = 1000  # Чем выше этот вес, тем более предпочтительным становится минимизировать число рабочих
-    # model.obj = Objective(expr=sum(model.start_time[j] for j in model.jobs) + worker_weight * sum(model.worker_used[k] for k in model.workers), sense=minimize)
 
 
     # Constraints
@@ -275,8 +269,16 @@ def build_model(weight_balance, weight_makespan):
     
     return model
 
-def solve_model(model):
+def solve_model(model, custom_data = False):
     # Solve the model
+    if custom_data:
+        for idx, i in enumerate(start_times, start=1):
+            model.start_time[idx].set_value(i)
+            model.start_time[idx].fix()
+
+        for key, value in data_dict.items():
+            model.worker_assigned[key].set_value(value)
+            model.worker_assigned[key].fix()
     start_time = time.time()
     solver = SolverFactory('scip')
     solver.options['threads'] = 6
@@ -347,11 +349,11 @@ def solve_model(model):
     # print(solver.solve(model, tee=True))
 
 
-def plot_schedule(model, title):
+def plot_schedule(model):
     tasks = []
     starts = []
     ends = []
-    
+    title = 'Base Schedule'
     colors = plt.cm.viridis(np.linspace(0, 1, len(project_data)))
 
     for j in model.jobs:
@@ -509,31 +511,83 @@ def plot_worker_utilization(model):
 
 
 
+def calculate_obj_value(weight_balance,weight_makespan, model):
+    return weight_balance * (model.max_work_time.value - model.min_work_time.value) + weight_makespan * sum(model.end_time[j].value for j in model.jobs)
 
 
+start_times = [0.0, 31.0, 82.0, 0.0, 
+               57.0, 120, 0.0, 24.0, 
+               83.0, 111.0, 0.0, 22.0, 
+               0.0, 32.0, 47.0, 75.0, 
+               105, 0.0, 32.0, 53.0]
 
+data_dict = {
+    (1, 1): 0.0, (1, 2): 0.0, (1, 3): 0.0, (1, 4): 0.0, (1, 5): 1.0,
+    (1, 6): 0.0, (1, 7): 0.0, (1, 8): 0.0, (1, 9): 0.0, (1, 10): 0.0,
+    (2, 1): 0.0, (2, 2): 0.0, (2, 3): 0.0, (2, 4): 0.0, (2, 5): 1.0,
+    (2, 6): 0.0, (2, 7): 0.0, (2, 8): 0.0, (2, 9): 0.0, (2, 10): 0.0,
+    (3, 1): 1.0, (3, 2): 0.0, (3, 3): 0.0, (3, 4): 0.0, (3, 5): 0.0,
+    (3, 6): 0.0, (3, 7): 0.0, (3, 8): 0.0, (3, 9): 0.0, (3, 10): 0.0,
+    (4, 1): 0.9999999999999996, (4, 2): 0.0, (4, 3): 0.0, (4, 4): 0.0, (4, 5): 0.0,
+    (4, 6): 0.0, (4, 7): 0.0, (4, 8): 0.0, (4, 9): 0.0, (4, 10): 0.0,
+    (5, 1): 0.0, (5, 2): 0.0, (5, 3): 0.0, (5, 4): 0.0, (5, 5): 0.0,
+    (5, 6): 0.0, (5, 7): 0.0, (5, 8): 0.0, (5, 9): 1.0, (5, 10): 0.0,
+    (6, 1): 0.0, (6, 2): 0.0, (6, 3): 0.0, (6, 4): 0.0, (6, 5): 0.0,
+    (6, 6): 0.0, (6, 7): 0.0, (6, 8): 0.0, (6, 9): 0.0, (6, 10): 1.0,
+    (7, 1): 0.0, (7, 2): 1.0, (7, 3): 0.0, (7, 4): 0.0, (7, 5): 0.0,
+    (7, 6): 0.0, (7, 7): 0.0, (7, 8): 0.0, (7, 9): 0.0, (7, 10): 0.0,
+    (8, 1): 0.0, (8, 2): 0.0, (8, 3): 0.0, (8, 4): 0.0, (8, 5): 0.0,
+    (8, 6): 1.0, (8, 7): 0.0, (8, 8): 0.0, (8, 9): 0.0, (8, 10): 0.0,
+    (9, 1): 0.0, (9, 2): 1.0, (9, 3): 0.0, (9, 4): 0.0, (9, 5): 0.0,
+    (9, 6): 0.0, (9, 7): 0.0, (9, 8): 0.0, (9, 9): 0.0, (9, 10): 0.0,
+    (10, 1): 0.0, (10, 2): 1.0, (10, 3): 0.0, (10, 4): 0.0, (10, 5): 0.0,
+    (10, 6): 0.0, (10, 7): 0.0, (10, 8): 0.0, (10, 9): 0.0, (10, 10): 0.0,
+    (11, 1): 0.0, (11, 2): 0.0, (11, 3): 0.0, (11, 4): 0.0, (11, 5): 0.0,
+    (11, 6): 0.0, (11, 7): 1.0, (11, 8): 0.0, (11, 9): 0.0, (11, 10): 0.0,
+    (12, 1): 0.0, (12, 2): 0.0, (12, 3): 0.0, (12, 4): 0.0, (12, 5): 0.0,
+    (12, 6): 0.0, (12, 7): 1.0, (12, 8): 0.0, (12, 9): 0.0, (12, 10): 0.0,
+    (13, 1): 0.0, (13, 2): 0.0, (13, 3): 1.0, (13, 4): 0.0, (13, 5): 0.0,
+    (13, 6): 0.0, (13, 7): 0.0, (13, 8): 0.0, (13, 9): 0.0, (13, 10): 0.0,
+    (14, 1): 0.0, (14, 2): 0.0, (14, 3): 1.0, (14, 4): 0.0, (14, 5): 0.0,
+    (14, 6): 0.0, (14, 7): 0.0, (14, 8): 0.0, (14, 9): 0.0, (14, 10): 0.0,
+    (15, 1): 0.0, (15, 2): 0.0, (15, 3): 1.0, (15, 4): 0.0, (15, 5): 0.0,
+    (15, 6): 0.0, (15, 7): 0.0, (15, 8): 0.0, (15, 9): 0.0, (15, 10): 0.0,
+    (16, 1): 0.0, (16, 2): 0.0, (16, 3): 0.0, (16, 4): 1.0, (16, 5): 0.0,
+    (16, 6): 0.0, (16, 7): 0.0, (16, 8): 0.0, (16, 9): 0.0, (16, 10): 0.0,
+    (17, 1): 0.0, (17, 2): 0.0, (17, 3): 0.0, (17, 4): 1.0, (17, 5): 0.0,
+    (17, 6): 0.0, (17, 7): 0.0, (17, 8): 0.0, (17, 9): 0.0, (17, 10): 0.0,
+    (18, 1): 0.0, (18, 2): 0.0, (18, 3): 0.0, (18, 4): 0.0, (18, 5): 0.0,
+    (18, 6): 0.0, (18, 7): 0.0, (18, 8): 1.0, (18, 9): 0.0, (18, 10): 0.0,
+    (19, 1): 0.0, (19, 2): 0.0, (19, 3): 0.0, (19, 4): 0.0, (19, 5): 0.0,
+    (19, 6): 0.0, (19, 7): 0.0, (19, 8): 1.0, (19, 9): 0.0, (19, 10): 0.0,
+    (20, 1): 0.0, (20, 2): 0.0, (20, 3): 0.0, (20, 4): 0.0, (20, 5): 0.0,
+    (20, 6): 0.0, (20, 7): 0.0, (20, 8): 1.0, (20, 9): 0.0, (20, 10): 0.0
+}
 
+def get_assignment():
+    assignment_dict = {}
+    for (job, worker), assigned in data_dict.items():
+        if assigned == 1.0:
+            assignment_dict[job] = (worker, jobs_data[job][0])
 
-# model_1000 = build_and_solve(1000)
-# plot_schedule(model_1000, "Schedule with worker_weight = 1000")
+    print(assignment_dict)  
 
-model11 = build_model(1,1)
-solve_model(model11)
-# model11.start_time[6].set_value(120)
-# model11.start_time[6].fix()
-# solve_model(model11)
-with open("solution_output.txt", "w") as file:
+def solution_to_file(model):
+    with open("solution_output.txt", "w") as file:
 
-    # Запись значений переменных
-    for v in model11.component_objects(Var, active=True):
-        file.write(f"Variable {v}\n")
-        varobject = getattr(model11, str(v))
-        for index in varobject:
-            file.write(f"   {index} {varobject[index].value}\n")
+        # Запись значений переменных
+        for v in model.component_objects(Var, active=True):
+            file.write(f"Variable {v}\n")
+            varobject = getattr(model, str(v))
+            for index in varobject:
+                file.write(f"   {index} {varobject[index].value}\n")
+            file.write("\n")
 
-    # Запись значения целевой функции
-    for o in model11.component_objects(Objective, active=True):
-        file.write(f"Objective {o} value: {value(o)}\n")
+        # Запись значения целевой функции
+        for o in model.component_objects(Objective, active=True):
+            file.write(f"Objective {o} value: {pyomo.environ.value(o)}\n")
+    print('Done')
+
 
 def exclude_solution(model):
     current_solution = [(j, k) for j in model.jobs for k in model.workers if model.worker_assigned[j, k].value > 0.5]
@@ -543,15 +597,14 @@ def exclude_solution(model):
         f"exclude_solution_{num_constraints + 1}", 
         Constraint(expr=sum(model.worker_assigned[j, k] for j, k in current_solution) <= len(current_solution) - 1))
 
-num_solutions = 30
-for i in range(num_solutions):
-    solve_model(model11)
-    print("Solution", i+1)
-    
-    exclude_solution(model11)
+def do_n_solutions(n, model):
+    num_solutions = n
+    for i in range(num_solutions):
+        solve_model(model)
+        print("Solution", i+1)
+        
+        exclude_solution(model)
 
-# plot_worker_load(model11)
-plot_worker_utilization(model11)
 
 # TODO разряды рабочих и влияние на временной норматив операции. 
 # график зависимости норматива от разряда линейный, сменный план по умолчанию. 
