@@ -19,113 +19,112 @@ def load_model(filename):
 
 random.seed(12345)
 
-# workers_data = {
-#         1: "Токарно-винторезная",
-#         2: "Слесарная",
-#         3: "Вертикально-сверлильная",
-#         4: "Токарная с ЧПУ",
-#         5: "Токарно-винторезная",
-#         6: "Слесарная",
-#         7: "Вертикально-сверлильная",
-#         8: "Токарная с ЧПУ",
-#         9: "Токарно-винторезная",
-#         10: "Слесарная",
-#         11: "Вертикально-сверлильная",
-#         12: "Токарная с ЧПУ",
-#         13: "Токарно-винторезная",
-#         14: "Слесарная",
-#         15: "Вертикально-сверлильная",
-#         16: "Токарная с ЧПУ",
-#     }
+workers_data = {
+    1: ("Токарно-винторезная", 1),
+    2: ("Слесарная", 1),
+    3: ("Вертикально-сверлильная", 1),
+    4: ("Токарная с ЧПУ", 1),
+    5: ("Токарно-винторезная", 2),
+    6: ("Слесарная", 2),
+    7: ("Вертикально-сверлильная", 2),
+    8: ("Токарная с ЧПУ", 2),
+    9: ("Токарно-винторезная", 3),
+    10: ("Слесарная", 3),
+    11: ("Вертикально-сверлильная", 3),
+    12: ("Токарная с ЧПУ", 3),
+    13: ("Токарно-винторезная", 4),
+    14: ("Слесарная", 4),
+    15: ("Вертикально-сверлильная", 4),
+    16: ("Токарная с ЧПУ", 4),
+}
+
+jobs_data = {
+    15: ("Токарно-винторезная", 5, [], 1),
+    25: ("Токарная с ЧПУ", 15, [15], 1),
+    35: ("Токарная с ЧПУ", 20, [25], 2),
+    45: ("Вертикально-сверлильная", 10, [35], 1),
+    55: ("Слесарная", 50, [45], 3),
+    100: ("Токарно-винторезная", 10, [], 2),
+    110: ("Слесарная", 25, [100], 2),
+    120: ("Токарно-винторезная", 35, [], 3),
+    130: ("Слесарная", 30, [120], 4),
+    140: ("Токарная с ЧПУ", 5, [130], 3),
+    150: ("Вертикально-сверлильная", 10, [140], 3),
+}
+
+project_data = {
+        1: [15, 25, 35, 45, 55],
+        2: [100, 110],
+        3: [120, 130, 140, 150]
+    }
 
 
-# jobs_data = {
-#         15: ("Токарно-винторезная", 5, []),
-#         25: ("Токарная с ЧПУ", 15, [15]),
-#         35: ("Токарная с ЧПУ", 20, [25]),
-#         45: ("Вертикально-сверлильная", 10, [35]),
-#         55: ("Слесарная", 50, [45]),
-#         100: ("Токарно-винторезная", 10, []),
-#         110: ("Слесарная", 25, [100]),
-#         120: ("Токарно-винторезная", 35, []),
-#         130: ("Слесарная", 30, [120]),
-#         140: ("Токарная с ЧПУ", 5, [130]),
-#         150: ("Вертикально-сверлильная", 10, [140]),
-#     }
 
-# project_data = {
-#         1: [15, 25, 35, 45, 55],
-#         2: [100, 110],
-#         3: [120, 130, 140, 150]
-#     }
+# # 1. Генерация рабочих
+# workers_data = {}
+# specializations = ["Токарно-винторезная", "Слесарная", "Вертикально-сверлильная", "Токарная с ЧПУ"]
+# num_workers = 10
+
+# # Рассчитываем, сколько рабочих каждой специальности нам нужно
+# workers_per_specialization = num_workers // len(specializations)
+
+# for worker_id in range(1, num_workers + 1):
+#     # Находим специализацию на основе текущего worker_id
+#     spec_index = (worker_id - 1) % len(specializations)
+#     workers_data[worker_id] = specializations[spec_index]
 
 
+# # 2. Генерация работ
+# jobs_data = {}
+# num_jobs = 20
 
-# 1. Генерация рабочих
-workers_data = {}
-specializations = ["Токарно-винторезная", "Слесарная", "Вертикально-сверлильная", "Токарная с ЧПУ"]
-num_workers = 10
+# # Рассчитываем, сколько задач с каждой специализацией нам нужно
+# jobs_per_specialization = num_jobs // len(specializations)
 
-# Рассчитываем, сколько рабочих каждой специальности нам нужно
-workers_per_specialization = num_workers // len(specializations)
-
-for worker_id in range(1, num_workers + 1):
-    # Находим специализацию на основе текущего worker_id
-    spec_index = (worker_id - 1) % len(specializations)
-    workers_data[worker_id] = specializations[spec_index]
-
-
-# 2. Генерация работ
-jobs_data = {}
-num_jobs = 20
-
-# Рассчитываем, сколько задач с каждой специализацией нам нужно
-jobs_per_specialization = num_jobs // len(specializations)
-
-for job_id in range(1, num_jobs + 1):
-    # Находим специализацию на основе текущего job_id
-    spec_index = min((job_id - 1) // jobs_per_specialization, len(specializations) - 1)
-    job_duration = random.randint(5, 60)
-    jobs_data[job_id] = (specializations[spec_index], job_duration, [])
+# for job_id in range(1, num_jobs + 1):
+#     # Находим специализацию на основе текущего job_id
+#     spec_index = min((job_id - 1) // jobs_per_specialization, len(specializations) - 1)
+#     job_duration = random.randint(5, 30)
+#     jobs_data[job_id] = (specializations[spec_index], job_duration, [])
 
 
-# 3. Генерация проектов и добавление предшественников к работам в проекте
-project_data = {}
-job_id = 1
-project_counter = 1
+# # 3. Генерация проектов и добавление предшественников к работам в проекте
+# project_data = {}
+# job_id = 1
+# project_counter = 1
 
-while job_id <= num_jobs:
-    project_size = random.randint(2, 5)  # Случайный размер проекта между 2 и 5
-    current_project_jobs = list(range(job_id, min(job_id + project_size, num_jobs + 1)))
+# while job_id <= num_jobs:
+#     project_size = random.randint(2, 5)  # Случайный размер проекта между 2 и 5
+#     current_project_jobs = list(range(job_id, min(job_id + project_size, num_jobs + 1)))
     
-    project_data[project_counter] = current_project_jobs
-    project_counter += 1
+#     project_data[project_counter] = current_project_jobs
+#     project_counter += 1
     
-    # Добавление предшественников для задач в текущем проекте
-    for idx, j_id in enumerate(current_project_jobs):
-        if idx > 0:  # Если это не первая задача в проекте
-            jobs_data[j_id] = (jobs_data[j_id][0], jobs_data[j_id][1], [j_id-1])
+#     # Добавление предшественников для задач в текущем проекте
+#     for idx, j_id in enumerate(current_project_jobs):
+#         if idx > 0:  # Если это не первая задача в проекте
+#             jobs_data[j_id] = (jobs_data[j_id][0], jobs_data[j_id][1], [j_id-1])
             
-    job_id += len(current_project_jobs)
+#     job_id += len(current_project_jobs)
 
 
-# Счетчик для специализаций среди рабочих
-worker_specializations_count = {spec: 0 for spec in specializations}
-for specialization in workers_data.values():
-    worker_specializations_count[specialization] += 1
+# # Счетчик для специализаций среди рабочих
+# worker_specializations_count = {spec: 0 for spec in specializations}
+# for specialization in workers_data.values():
+#     worker_specializations_count[specialization] += 1
 
-# Счетчик для требуемых специализаций среди задач
-job_specializations_count = {spec: 0 for spec in specializations}
-for specialization, _, _ in jobs_data.values():
-    job_specializations_count[specialization] += 1
+# # Счетчик для требуемых специализаций среди задач
+# job_specializations_count = {spec: 0 for spec in specializations}
+# for specialization, _, _ in jobs_data.values():
+#     job_specializations_count[specialization] += 1
 
-print("Специализации рабочих:")
-for spec, count in worker_specializations_count.items():
-    print(f"{spec}: {count}")
+# print("Специализации рабочих:")
+# for spec, count in worker_specializations_count.items():
+#     print(f"{spec}: {count}")
 
-print("\nТребуемые специализации для задач:")
-for spec, count in job_specializations_count.items():
-    print(f"{spec}: {count}")
+# print("\nТребуемые специализации для задач:")
+# for spec, count in job_specializations_count.items():
+#     print(f"{spec}: {count}")
 
 
 # print(workers_data)
@@ -156,13 +155,15 @@ def build_model(weight_balance, weight_makespan):
     model.jobs = Set(initialize=list(jobs_data.keys()))
 
     # Parameters
-    model.specialization = Param(model.workers, initialize=workers_data)
+    model.specialization = Param(model.workers, initialize={k: v[0] for k, v in workers_data.items()})
     model.job_duration = Param(model.jobs, initialize={k: v[1] for k, v in jobs_data.items()})
     # model.job_required_specialization = Param(model.jobs, initialize={k: v[0] for k, v in jobs_data.items()})
     model.job_required_specialization = Param(model.jobs, within=Any, initialize={k: v[0] for k, v in jobs_data.items()})
     model.predecessors = Param(model.jobs, within=Any, initialize={k: v[2] for k, v in jobs_data.items()})
     
     model.task_to_project = Param(model.jobs, initialize=task_to_project)
+    model.worker_qualification = Param(model.workers, initialize={k: v[1] for k, v in workers_data.items()})
+    model.job_required_qualification = Param(model.jobs, initialize={k: v[3] for k, v in jobs_data.items()})
 
 
 
@@ -178,6 +179,9 @@ def build_model(weight_balance, weight_makespan):
     model.worker_used = Var(model.workers, domain=Binary)
     model.max_work_time = Var(domain=NonNegativeReals)
     model.min_work_time = Var(domain=NonNegativeReals)
+    model.worker_deviation = Var(model.workers, domain=NonNegativeReals)  # отклонение времени каждого рабочего от среднего значения
+    model.average_work_time = Var(domain=NonNegativeReals)  # среднее рабочее время
+
 
 
     bigM = sum(model.job_duration.values())
@@ -185,8 +189,12 @@ def build_model(weight_balance, weight_makespan):
 
     # Objective (You may need to specify the objective depending on your specific requirements)
     # model.obj = Objective(expr=model.makespan, sense=minimize)
+    # model.obj = Objective(expr=weight_balance * (model.max_work_time - model.min_work_time) + 
+    #                   weight_makespan * sum(model.end_time[j] for j in model.jobs), sense=minimize)
     model.obj = Objective(expr=weight_balance * (model.max_work_time - model.min_work_time) + 
-                      weight_makespan * sum(model.end_time[j] for j in model.jobs), sense=minimize)
+                      weight_makespan * sum(model.end_time[j] for j in model.jobs) + 
+                      sum(model.worker_deviation[k] * model.worker_deviation[k] for k in model.workers), 
+                      sense=minimize)
 
 
 
@@ -203,6 +211,30 @@ def build_model(weight_balance, weight_makespan):
         return model.worker_assigned[i, k] <= model.worker_used[k]
 
     model.worker_usage_constraint = Constraint(model.jobs, model.workers, rule=worker_usage_rule)
+
+    # def qualification_rule(model, i, k):
+    #     return model.worker_qualification[k] >= model.job_required_qualification[i]
+
+    def worker_assignment_rule(model, i, k):
+        specialization_match = model.specialization[k] == model.job_required_specialization[i]
+        qualification_match = model.worker_qualification[k] >= model.job_required_qualification[i]
+        
+        if specialization_match and qualification_match:
+            return model.worker_assigned[i, k] <= 1
+        else:
+            return model.worker_assigned[i, k] == 0
+
+    model.worker_assignment_constraint = Constraint(model.jobs, model.workers, rule=worker_assignment_rule)
+
+    # Определим среднее рабочее время
+    def average_work_time_rule(model):
+        return model.average_work_time == sum(sum(model.job_duration[j] * model.worker_assigned[j, k] for j in model.jobs) for k in model.workers) / len(model.workers)
+    model.average_work_time_constraint = Constraint(rule=average_work_time_rule)
+
+    # Определим отклонение для каждого рабочего от среднего значения
+    def worker_deviation_rule(model, k):
+        return model.worker_deviation[k] >= model.average_work_time - sum(model.job_duration[j] * model.worker_assigned[j, k] for j in model.jobs)
+    model.worker_deviation_constraint = Constraint(model.workers, rule=worker_deviation_rule)
 
 
     # задачи, назначенные одному рабочему, не перекрываются по времени
@@ -237,13 +269,13 @@ def build_model(weight_balance, weight_makespan):
         return model.end_time[i] <= model.makespan
     model.makespan_constraint = Constraint(model.jobs, rule=makespan_rule)
 
-    # задача может быть назначена рабочему только если его специализация соответствует требованиям задачи
-    def specialization_rule(model, i, k):
-        if model.specialization[k] == model.job_required_specialization[i]:
-            return model.worker_assigned[i, k] <= 1
-        else:
-            return model.worker_assigned[i, k] == 0
-    model.specialization_constraint = Constraint(model.jobs, model.workers, rule=specialization_rule)
+    # # задача может быть назначена рабочему только если его специализация соответствует требованиям задачи
+    # def specialization_rule(model, i, k):
+    #     if model.specialization[k] == model.job_required_specialization[i]:
+    #         return model.worker_assigned[i, k] <= 1
+    #     else:
+    #         return model.worker_assigned[i, k] == 0
+    # model.specialization_constraint = Constraint(model.jobs, model.workers, rule=specialization_rule)
 
     # убеждается, что каждая задача назначена только одному рабочему
     def job_assignment_rule(model, i):
@@ -281,8 +313,10 @@ def solve_model(model, custom_data = False):
             model.worker_assigned[key].fix()
     start_time = time.time()
     solver = SolverFactory('scip')
-    solver.options['threads'] = 6
-    result = solver.solve(model)
+    # solver.options['threads'] = 6
+    # solver.options['set/lp/initalgorithm'] = 'd'
+    # solver.options['warmstart'] = True
+    result = solver.solve(model, tee=True)
     print('Model Solved')
     print("Solver Status:", result.solver.status)
     print("Solver Termination Condition:", result.solver.termination_condition)
@@ -321,6 +355,11 @@ def solve_model(model, custom_data = False):
         hours = total_minutes // 60
         minutes = total_minutes % 60
         print(f"Worker {k} ({workers_data[k]}) worked for total time: {hours}h {minutes}m and has {int(assigned_jobs_count)} tasks assigned.")
+    
+    for j in model.jobs:
+        for k in model.workers:
+            if model.worker_assigned[j, k].value == 1:  # Если рабочий k назначен на задачу j
+                print(f"Рабочий {k}, Специализация: {workers_data[k][0]}, Задача: {j}, Требуемый разряд: {jobs_data[j][3]}, Разряд рабочего: {workers_data[k][1]}")
 
     # Список времени работы для каждого рабочего
     worker_times = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
@@ -335,7 +374,7 @@ def solve_model(model, custom_data = False):
     # Конвертируем стандартное отклонение в часы и минуты
     std_hours = int(std_deviation // 60)
     std_minutes = int(std_deviation % 60)
-
+    print(f'Среднее время работы {average_work_time}')
     print(f"\nСтандартное отклонение времени работы рабочего: {std_hours}h {std_minutes}m")
 
     final_end_time = max(model.end_time[j].value for j in model.jobs)
