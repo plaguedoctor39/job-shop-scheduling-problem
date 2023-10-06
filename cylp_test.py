@@ -4,4 +4,9 @@ s.readMps('model.mps')
 
 s.initialSolve()
 
-print(round(s.objectiveValue, 3))
+print(f"Optimal value of objective function: {round(s.objectiveValue, 3)}")
+
+if s.getStatusString() == "optimal":
+    print("The solution is optimal.")
+else:
+    print(f"Solution status: {s.getStatusString()}")
