@@ -19,93 +19,95 @@ def load_model(filename):
 
 random.seed(12345)
 
-workers_data = {
-    1: ("Токарно-винторезная", 1, 5.0),
-    2: ("Слесарная", 1, 5.0),
-    3: ("Вертикально-сверлильная", 1, 5.0),
-    4: ("Токарная с ЧПУ", 1, 5.0),
-    5: ("Токарно-винторезная", 2, 5.5),
-    6: ("Слесарная", 2, 5.5),
-    7: ("Вертикально-сверлильная", 2, 5.5),
-    8: ("Токарная с ЧПУ", 2, 5.5),
-    9: ("Токарно-винторезная", 3, 6.0),
-    10: ("Слесарная", 3, 6.0),
-    11: ("Вертикально-сверлильная", 3, 6.0),
-    12: ("Токарная с ЧПУ", 3, 6.0),
-    13: ("Токарно-винторезная", 4, 6.5),
-    14: ("Слесарная", 4, 6.5),
-    15: ("Вертикально-сверлильная", 4, 6.5),
-    16: ("Токарная с ЧПУ", 4, 6.5),
-}
+# workers_data = {
+#     1: ("Токарно-винторезная", 1, 5.0),
+#     2: ("Слесарная", 1, 5.0),
+#     3: ("Вертикально-сверлильная", 1, 5.0),
+#     4: ("Токарная с ЧПУ", 1, 5.0),
+#     5: ("Токарно-винторезная", 2, 5.5),
+#     6: ("Слесарная", 2, 5.5),
+#     7: ("Вертикально-сверлильная", 2, 5.5),
+#     8: ("Токарная с ЧПУ", 2, 5.5),
+#     9: ("Токарно-винторезная", 3, 6.0),
+#     10: ("Слесарная", 3, 6.0),
+#     11: ("Вертикально-сверлильная", 3, 6.0),
+#     12: ("Токарная с ЧПУ", 3, 6.0),
+#     13: ("Токарно-винторезная", 4, 6.5),
+#     14: ("Слесарная", 4, 6.5),
+#     15: ("Вертикально-сверлильная", 4, 6.5),
+#     16: ("Токарная с ЧПУ", 4, 6.5),
+# }
 
-jobs_data = {
-    15: ("Токарно-винторезная", 5, [], 1),
-    25: ("Токарная с ЧПУ", 15, [15], 1),
-    35: ("Токарная с ЧПУ", 20, [25], 2),
-    45: ("Вертикально-сверлильная", 10, [35], 1),
-    55: ("Слесарная", 50, [45], 3),
-    100: ("Токарно-винторезная", 10, [], 2),
-    110: ("Слесарная", 25, [100], 2),
-    120: ("Токарно-винторезная", 35, [], 3),
-    130: ("Слесарная", 30, [120], 4),
-    140: ("Токарная с ЧПУ", 5, [130], 3),
-    150: ("Вертикально-сверлильная", 10, [140], 3),
-}
+# jobs_data = {
+#     15: ("Токарно-винторезная", 5, [], 1),
+#     25: ("Токарная с ЧПУ", 15, [15], 1),
+#     35: ("Токарная с ЧПУ", 20, [25], 2),
+#     45: ("Вертикально-сверлильная", 10, [35], 1),
+#     55: ("Слесарная", 50, [45], 3),
+#     100: ("Токарно-винторезная", 10, [], 2),
+#     110: ("Слесарная", 25, [100], 2),
+#     120: ("Токарно-винторезная", 35, [], 3),
+#     130: ("Слесарная", 30, [120], 4),
+#     140: ("Токарная с ЧПУ", 5, [130], 3),
+#     150: ("Вертикально-сверлильная", 10, [140], 3),
+# }
 
-project_data = {
-        1: [15, 25, 35, 45, 55],
-        2: [100, 110],
-        3: [120, 130, 140, 150]
-    }
-
-
-
-# # 1. Генерация рабочих
-# workers_data = {}
-# specializations = ["Токарно-винторезная", "Слесарная", "Вертикально-сверлильная", "Токарная с ЧПУ"]
-# num_workers = 10
-
-# # Рассчитываем, сколько рабочих каждой специальности нам нужно
-# workers_per_specialization = num_workers // len(specializations)
-
-# for worker_id in range(1, num_workers + 1):
-#     # Находим специализацию на основе текущего worker_id
-#     spec_index = (worker_id - 1) % len(specializations)
-#     workers_data[worker_id] = specializations[spec_index]
+# project_data = {
+#         1: [15, 25, 35, 45, 55],
+#         2: [100, 110],
+#         3: [120, 130, 140, 150]
+#     }
 
 
-# # 2. Генерация работ
-# jobs_data = {}
-# num_jobs = 20
-
-# # Рассчитываем, сколько задач с каждой специализацией нам нужно
-# jobs_per_specialization = num_jobs // len(specializations)
-
-# for job_id in range(1, num_jobs + 1):
-#     # Находим специализацию на основе текущего job_id
-#     spec_index = min((job_id - 1) // jobs_per_specialization, len(specializations) - 1)
-#     job_duration = random.randint(5, 30)
-#     jobs_data[job_id] = (specializations[spec_index], job_duration, [])
 
 
-# # 3. Генерация проектов и добавление предшественников к работам в проекте
-# project_data = {}
-# job_id = 1
-# project_counter = 1
+# Создаем случайный набор работников
+num_workers = 10
+specializations = ["Токарно-винторезная", "Слесарная", "Вертикально-сверлильная", "Токарная с ЧПУ"]
+grades = list(range(1, 5))
+cost_rates = [5.0, 5.5, 6.0, 6.5]
 
-# while job_id <= num_jobs:
-#     project_size = random.randint(2, 5)  # Случайный размер проекта между 2 и 5
-#     current_project_jobs = list(range(job_id, min(job_id + project_size, num_jobs + 1)))
-    
-#     project_data[project_counter] = current_project_jobs
-#     project_counter += 1
-    
-#     # Добавление предшественников для задач в текущем проекте
-#     for idx, j_id in enumerate(current_project_jobs):
-#         if idx > 0:  # Если это не первая задача в проекте
-#             jobs_data[j_id] = (jobs_data[j_id][0], jobs_data[j_id][1], [j_id-1])
-            
-#     job_id += len(current_project_jobs)
+workers_data = {}
+for i in range(1, num_workers + 1):
+    spec = random.choice(specializations)
+    grade = random.choice(grades)
+    rate = cost_rates[grade - 1]
+    workers_data[i] = (spec, grade, rate)
+
+# Генерация проектов
+num_projects = 10
+max_tasks_per_project = 5
+project_data = {}
+
+jobs_data = {}
+job_id = 1
+
+workers_pool = list(workers_data.keys())
+
+for p in range(1, num_projects + 1):
+    project_data[p] = []
+    num_tasks = random.randint(1, max_tasks_per_project)
+    for _ in range(num_tasks):
+        chosen_worker = random.choice(workers_pool)
+        workers_pool.remove(chosen_worker)
+        
+        spec, grade, _ = workers_data[chosen_worker]
+        duration = random.randint(5, 50)  # Продолжительность задачи в минутах
+        dependencies = [job_id - 1] if job_id - 1 in jobs_data else []
+        
+        jobs_data[job_id] = (spec, duration, dependencies, grade)
+        project_data[p].append(job_id)
+        
+        job_id += 1
+        
+        # If we've exhausted the pool, we refill it to ensure we can assign more tasks
+        if not workers_pool:
+            workers_pool = list(workers_data.keys())
+
+print("Generated workers_data:", workers_data)
+print("\nGenerated jobs_data:", jobs_data)
+print("\nGenerated project_data:", project_data)
+
 
 
 # # Счетчик для специализаций среди рабочих
@@ -126,10 +128,6 @@ project_data = {
 # for spec, count in job_specializations_count.items():
 #     print(f"{spec}: {count}")
 
-
-# print(workers_data)
-# print(jobs_data)
-# print(project_data)
 
 
 
