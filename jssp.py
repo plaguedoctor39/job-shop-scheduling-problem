@@ -8,6 +8,7 @@ import random
 import numpy as np
 import time
 import pickle
+from datetime import datetime, timedelta
 
 def save_model(model, filename):
     with open(filename, 'wb') as file:
@@ -19,95 +20,96 @@ def load_model(filename):
 
 random.seed(12345)
 
-# workers_data = {
-#     1: ("Токарно-винторезная", 1, 5.0),
-#     2: ("Слесарная", 1, 5.0),
-#     3: ("Вертикально-сверлильная", 1, 5.0),
-#     4: ("Токарная с ЧПУ", 1, 5.0),
-#     5: ("Токарно-винторезная", 2, 5.5),
-#     6: ("Слесарная", 2, 5.5),
-#     7: ("Вертикально-сверлильная", 2, 5.5),
-#     8: ("Токарная с ЧПУ", 2, 5.5),
-#     9: ("Токарно-винторезная", 3, 6.0),
-#     10: ("Слесарная", 3, 6.0),
-#     11: ("Вертикально-сверлильная", 3, 6.0),
-#     12: ("Токарная с ЧПУ", 3, 6.0),
-#     13: ("Токарно-винторезная", 4, 6.5),
-#     14: ("Слесарная", 4, 6.5),
-#     15: ("Вертикально-сверлильная", 4, 6.5),
-#     16: ("Токарная с ЧПУ", 4, 6.5),
-# }
+workers_data = {
+    1: ("Токарно-винторезная", 1, 50),
+    2: ("Слесарная", 1, 50),
+    3: ("Вертикально-сверлильная", 1, 50),
+    4: ("Токарная с ЧПУ", 1, 50),
+    5: ("Токарно-винторезная", 2, 55),
+    6: ("Слесарная", 2, 55),
+    7: ("Вертикально-сверлильная", 2, 55),
+    8: ("Токарная с ЧПУ", 2, 55),
+    9: ("Токарно-винторезная", 3, 60),
+    10: ("Слесарная", 3, 60),
+    11: ("Вертикально-сверлильная", 3, 60),
+    12: ("Токарная с ЧПУ", 3, 60),
+    13: ("Токарно-винторезная", 4, 65),
+    14: ("Слесарная", 4, 65),
+    15: ("Вертикально-сверлильная", 4, 65),
+    16: ("Токарная с ЧПУ", 4, 65),
+}
 
-# jobs_data = {
-#     15: ("Токарно-винторезная", 5, [], 1),
-#     25: ("Токарная с ЧПУ", 15, [15], 1),
-#     35: ("Токарная с ЧПУ", 20, [25], 2),
-#     45: ("Вертикально-сверлильная", 10, [35], 1),
-#     55: ("Слесарная", 50, [45], 3),
-#     100: ("Токарно-винторезная", 10, [], 2),
-#     110: ("Слесарная", 25, [100], 2),
-#     120: ("Токарно-винторезная", 35, [], 3),
-#     130: ("Слесарная", 30, [120], 4),
-#     140: ("Токарная с ЧПУ", 5, [130], 3),
-#     150: ("Вертикально-сверлильная", 10, [140], 3),
-# }
+jobs_data = {
+    15: ("Токарно-винторезная", 5, [], 1),
+    25: ("Токарная с ЧПУ", 15, [15], 1),
+    35: ("Токарная с ЧПУ", 20, [25], 2),
+    45: ("Вертикально-сверлильная", 10, [35], 1),
+    55: ("Слесарная", 50, [45], 3),
+    100: ("Токарно-винторезная", 10, [], 2),
+    110: ("Слесарная", 25, [100], 2),
+    120: ("Токарно-винторезная", 35, [], 3),
+    130: ("Слесарная", 30, [120], 4),
+    140: ("Токарная с ЧПУ", 5, [130], 3),
+    150: ("Вертикально-сверлильная", 10, [140], 3),
+}
 
-# project_data = {
-#         1: [15, 25, 35, 45, 55],
-#         2: [100, 110],
-#         3: [120, 130, 140, 150]
-#     }
-
-
+project_data = {
+        1: ([15, 25, 35, 45, 55], 2 * 60),
+        2: ([100, 110], 8 * 60),
+        3: ([120, 130, 140, 150], 3 * 60)
+    }
 
 
-# Создаем случайный набор работников
-num_workers = 10
-specializations = ["Токарно-винторезная", "Слесарная", "Вертикально-сверлильная", "Токарная с ЧПУ"]
-grades = list(range(1, 5))
-cost_rates = [5.0, 5.5, 6.0, 6.5]
 
-workers_data = {}
-for i in range(1, num_workers + 1):
-    spec = random.choice(specializations)
-    grade = random.choice(grades)
-    rate = cost_rates[grade - 1]
-    workers_data[i] = (spec, grade, rate)
+def gen_data():
+    # Создаем случайный набор работников
+    num_workers = 10
+    specializations = ["Токарно-винторезная", "Слесарная", "Вертикально-сверлильная", "Токарная с ЧПУ"]
+    grades = list(range(1, 5))
+    cost_rates = [5.0, 5.5, 6.0, 6.5]
 
-# Генерация проектов
-num_projects = 10
-max_tasks_per_project = 5
-project_data = {}
+    workers_data = {}
+    for i in range(1, num_workers + 1):
+        spec = random.choice(specializations)
+        grade = random.choice(grades)
+        rate = cost_rates[grade - 1]
+        workers_data[i] = (spec, grade, rate)
 
-jobs_data = {}
-job_id = 1
+    # Генерация проектов
+    num_projects = 10
+    max_tasks_per_project = 5
+    project_data = {}
 
-workers_pool = list(workers_data.keys())
+    jobs_data = {}
+    job_id = 1
 
-for p in range(1, num_projects + 1):
-    project_data[p] = []
-    num_tasks = random.randint(1, max_tasks_per_project)
-    for _ in range(num_tasks):
-        chosen_worker = random.choice(workers_pool)
-        workers_pool.remove(chosen_worker)
-        
-        spec, grade, _ = workers_data[chosen_worker]
-        duration = random.randint(5, 50)  # Продолжительность задачи в минутах
-        dependencies = [job_id - 1] if job_id - 1 in jobs_data else []
-        
-        jobs_data[job_id] = (spec, duration, dependencies, grade)
-        project_data[p].append(job_id)
-        
-        job_id += 1
-        
-        # If we've exhausted the pool, we refill it to ensure we can assign more tasks
-        if not workers_pool:
-            workers_pool = list(workers_data.keys())
+    workers_pool = list(workers_data.keys())
 
-print("Generated workers_data:", workers_data)
-print("\nGenerated jobs_data:", jobs_data)
-print("\nGenerated project_data:", project_data)
+    for p in range(1, num_projects + 1):
+        project_data[p] = []
+        num_tasks = random.randint(1, max_tasks_per_project)
+        for _ in range(num_tasks):
+            chosen_worker = random.choice(workers_pool)
+            workers_pool.remove(chosen_worker)
+            
+            spec, grade, _ = workers_data[chosen_worker]
+            duration = random.randint(5, 50)  # Продолжительность задачи в минутах
+            dependencies = [job_id - 1] if job_id - 1 in jobs_data else []
+            
+            jobs_data[job_id] = (spec, duration, dependencies, grade)
+            project_data[p].append(job_id)
+            
+            job_id += 1
+            
+            if not workers_pool:
+                workers_pool = list(workers_data.keys())
 
+    print("Generated workers_data:", workers_data)
+    print("\nGenerated jobs_data:", jobs_data)
+    print("\nGenerated project_data:", project_data)
+    return workers_data, jobs_data, project_data
+
+# workers_data, jobs_data, project_data = gen_data()
 
 
 # # Счетчик для специализаций среди рабочих
@@ -131,7 +133,8 @@ print("\nGenerated project_data:", project_data)
 
 
 
-task_to_project = {j: p for p, job_list in project_data.items() for j in job_list}
+task_to_project = {j: p for p, (job_list, _) in project_data.items() for j in job_list}
+
 for j in jobs_data.keys():
     if j not in task_to_project:
         print(f"Job {j} is not assigned to any project!")
@@ -151,6 +154,7 @@ def build_model(weight_balance, weight_makespan, weight_costs=1):
     # Sets
     model.workers = Set(initialize=list(workers_data.keys()))
     model.jobs = Set(initialize=list(jobs_data.keys()))
+    model.projects = Set(initialize=project_data.keys())
 
     # Parameters
     model.specialization = Param(model.workers, initialize={k: v[0] for k, v in workers_data.items()})
@@ -179,6 +183,7 @@ def build_model(weight_balance, weight_makespan, weight_costs=1):
     model.min_work_time = Var(domain=NonNegativeReals)
     model.worker_deviation = Var(model.workers, domain=NonNegativeReals)  # отклонение времени каждого рабочего от среднего значения
     model.average_work_time = Var(domain=NonNegativeReals)  # среднее рабочее время
+    model.project_delay = Var(model.projects, within=NonNegativeReals)
 
 
     bigM = sum(model.job_duration.values())
@@ -193,11 +198,22 @@ def build_model(weight_balance, weight_makespan, weight_costs=1):
     #                   weight_makespan * sum(model.end_time[j] for j in model.jobs) + 
     #                   sum(model.worker_deviation[k] * model.worker_deviation[k] for k in model.workers), 
     #                   sense=minimize)
-    model.obj = Objective(expr=weight_balance * (model.max_work_time - model.min_work_time) + 
-                      weight_makespan * sum(model.end_time[j] for j in model.jobs) + 
-                      sum(model.worker_deviation[k] * model.worker_deviation[k] for k in model.workers) +
-                      weight_costs * sum(model.worker_assigned[j, k] * model.job_duration[j] * model.cost_rate[k] for j in model.jobs for k in model.workers),
-                      sense=minimize)
+    # model.obj = Objective(expr=weight_balance * (model.max_work_time - model.min_work_time) + 
+    #                   weight_makespan * sum(model.end_time[j] for j in model.jobs) + 
+    #                   sum(model.worker_deviation[k] * model.worker_deviation[k] for k in model.workers) +
+    #                   weight_costs * sum(model.worker_assigned[j, k] * model.job_duration[j] * model.cost_rate[k] for j in model.jobs for k in model.workers),
+    #                   sense=minimize)
+    weight_delay = 1  # это весовой коэффициент, который можно настроить
+
+    model.obj = Objective(
+        expr=weight_balance * (model.max_work_time - model.min_work_time) +
+            weight_makespan * sum(model.end_time[j] for j in model.jobs) +
+            sum(model.worker_deviation[k] * model.worker_deviation[k] for k in model.workers) +
+            weight_costs * sum(model.worker_assigned[j, k] * model.job_duration[j] * model.cost_rate[k] for j in model.jobs for k in model.workers) +
+            weight_delay * sum(model.project_delay[p] for p in model.projects),
+        sense=minimize
+    )
+
 
 
 
@@ -298,6 +314,14 @@ def build_model(weight_balance, weight_makespan, weight_costs=1):
         return model.min_work_time <= sum(model.job_duration[j] * model.worker_assigned[j, k] for j in model.jobs)
     model.min_work_time_constraint = Constraint(model.workers, rule=min_work_time_rule)
 
+    def project_delay_rule(model, p):
+        last_task = project_data[p][0][-1]
+        return model.end_time[last_task] <= project_data[p][1] + model.project_delay[p]
+
+
+    model.project_delay_constr = Constraint(model.projects, rule=project_delay_rule)
+
+
     model.write(filename='model.mps', format=ProblemFormat.mps)
     end_time = time.time()
     elapsed_time = end_time - start_time
@@ -352,9 +376,24 @@ def solve_model(model, custom_data = False):
     # print("\nWorker Idle Times:")
     # for k in model.workers:
     #     print(f"Worker {k} idle time: {model.idle_time[k].value}")
+    start_time = datetime(year=2023, month=9, day=19, hour=8)
+    def convert_to_datetime(minutes_since_start):
+        return start_time + timedelta(minutes=minutes_since_start)
+
+    print("\nProject Deadlines and End Times:")
+    for p, job_list_and_deadline in project_data.items():
+        job_list = job_list_and_deadline[0]
+        deadline = job_list_and_deadline[1]
+        project_end_time = max(model.end_time[j].value for j in job_list)
+
+        formatted_deadline = convert_to_datetime(deadline).strftime('%H:%M')
+        formatted_end_time = convert_to_datetime(project_end_time).strftime('%H:%M')
+        
+        print(f"Project {p} ends at: {formatted_end_time}. Deadline: {formatted_deadline}.")
 
     total_expense = 0  # Переменная для подсчета общих затрат
 
+    print("\nWorker Performance and Costs:")
     for k in model.workers:
         assigned_jobs_count = sum(model.worker_assigned[j, k].value for j in model.jobs)
         total_minutes = sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs)
@@ -388,8 +427,10 @@ def solve_model(model, custom_data = False):
     print(f"\nСтандартное отклонение времени работы рабочего: {std_hours}h {std_minutes}m")
     print(f"\nTotal expenses for all workers: {total_expense:.2f} RUB.") 
     final_end_time = max(model.end_time[j].value for j in model.jobs)
+    final_time = start_time + timedelta(minutes=final_end_time)
 
-    print(f"\nFinal End Time of Last Job: {final_end_time}")
+    print(f"\nFinal End Time of Last Job: {final_time.strftime('%Y-%m-%d %H:%M')}")
+
     print(f"Solve execution time: {elapsed_time:.2f} seconds")
     objective_value = model.obj.expr()
     print(f"Value of the objective function: {objective_value}")
