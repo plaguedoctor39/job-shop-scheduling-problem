@@ -20,22 +20,22 @@ def load_model(filename):
 random.seed(12345)
 
 workers_data = {
-    1: ("Токарно-винторезная", 1),
-    2: ("Слесарная", 1),
-    3: ("Вертикально-сверлильная", 1),
-    4: ("Токарная с ЧПУ", 1),
-    5: ("Токарно-винторезная", 2),
-    6: ("Слесарная", 2),
-    7: ("Вертикально-сверлильная", 2),
-    8: ("Токарная с ЧПУ", 2),
-    9: ("Токарно-винторезная", 3),
-    10: ("Слесарная", 3),
-    11: ("Вертикально-сверлильная", 3),
-    12: ("Токарная с ЧПУ", 3),
-    13: ("Токарно-винторезная", 4),
-    14: ("Слесарная", 4),
-    15: ("Вертикально-сверлильная", 4),
-    16: ("Токарная с ЧПУ", 4),
+    1: ("Токарно-винторезная", 1, 5.0),
+    2: ("Слесарная", 1, 5.0),
+    3: ("Вертикально-сверлильная", 1, 5.0),
+    4: ("Токарная с ЧПУ", 1, 5.0),
+    5: ("Токарно-винторезная", 2, 5.5),
+    6: ("Слесарная", 2, 5.5),
+    7: ("Вертикально-сверлильная", 2, 5.5),
+    8: ("Токарная с ЧПУ", 2, 5.5),
+    9: ("Токарно-винторезная", 3, 6.0),
+    10: ("Слесарная", 3, 6.0),
+    11: ("Вертикально-сверлильная", 3, 6.0),
+    12: ("Токарная с ЧПУ", 3, 6.0),
+    13: ("Токарно-винторезная", 4, 6.5),
+    14: ("Слесарная", 4, 6.5),
+    15: ("Вертикально-сверлильная", 4, 6.5),
+    16: ("Токарная с ЧПУ", 4, 6.5),
 }
 
 jobs_data = {
@@ -138,7 +138,7 @@ for j in jobs_data.keys():
     if j not in task_to_project:
         print(f"Job {j} is not assigned to any project!")
 
-def build_model(weight_balance, weight_makespan):
+def build_model(weight_balance, weight_makespan, weight_costs=1):
     start_time = time.time()
 
     model = ConcreteModel()
@@ -164,7 +164,7 @@ def build_model(weight_balance, weight_makespan):
     model.task_to_project = Param(model.jobs, initialize=task_to_project)
     model.worker_qualification = Param(model.workers, initialize={k: v[1] for k, v in workers_data.items()})
     model.job_required_qualification = Param(model.jobs, initialize={k: v[3] for k, v in jobs_data.items()})
-
+    model.cost_rate = Param(model.workers, initialize={k: v[2] for k, v in workers_data.items()})
 
 
     # Variables
@@ -183,7 +183,6 @@ def build_model(weight_balance, weight_makespan):
     model.average_work_time = Var(domain=NonNegativeReals)  # среднее рабочее время
 
 
-
     bigM = sum(model.job_duration.values())
     # bigM = 1000
 
@@ -191,10 +190,17 @@ def build_model(weight_balance, weight_makespan):
     # model.obj = Objective(expr=model.makespan, sense=minimize)
     # model.obj = Objective(expr=weight_balance * (model.max_work_time - model.min_work_time) + 
     #                   weight_makespan * sum(model.end_time[j] for j in model.jobs), sense=minimize)
+    
+    # model.obj = Objective(expr=weight_balance * (model.max_work_time - model.min_work_time) + 
+    #                   weight_makespan * sum(model.end_time[j] for j in model.jobs) + 
+    #                   sum(model.worker_deviation[k] * model.worker_deviation[k] for k in model.workers), 
+    #                   sense=minimize)
     model.obj = Objective(expr=weight_balance * (model.max_work_time - model.min_work_time) + 
                       weight_makespan * sum(model.end_time[j] for j in model.jobs) + 
-                      sum(model.worker_deviation[k] * model.worker_deviation[k] for k in model.workers), 
+                      sum(model.worker_deviation[k] * model.worker_deviation[k] for k in model.workers) +
+                      weight_costs * sum(model.worker_assigned[j, k] * model.job_duration[j] * model.cost_rate[k] for j in model.jobs for k in model.workers),
                       sense=minimize)
+
 
 
 
@@ -349,13 +355,18 @@ def solve_model(model, custom_data = False):
     # for k in model.workers:
     #     print(f"Worker {k} idle time: {model.idle_time[k].value}")
 
+    total_expense = 0  # Переменная для подсчета общих затрат
+
     for k in model.workers:
         assigned_jobs_count = sum(model.worker_assigned[j, k].value for j in model.jobs)
         total_minutes = sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs)
         hours = total_minutes // 60
         minutes = total_minutes % 60
-        print(f"Worker {k} ({workers_data[k]}) worked for total time: {hours}h {minutes}m and has {int(assigned_jobs_count)} tasks assigned.")
-    
+        worker_cost = total_minutes * model.cost_rate[k]  # Рассчитываем затраты для рабочего
+        total_expense += worker_cost  # Добавляем затраты рабочего к общим затратам
+        print(f"Worker {k} ({workers_data[k]}) worked for total time: {hours}h {minutes}m, has {int(assigned_jobs_count)} tasks assigned and costs: {worker_cost:.2f} RUB.")
+
+
     for j in model.jobs:
         for k in model.workers:
             if model.worker_assigned[j, k].value == 1:  # Если рабочий k назначен на задачу j
@@ -374,9 +385,10 @@ def solve_model(model, custom_data = False):
     # Конвертируем стандартное отклонение в часы и минуты
     std_hours = int(std_deviation // 60)
     std_minutes = int(std_deviation % 60)
-    print(f'Среднее время работы {average_work_time}')
+    print('')
+    print(f'Среднее время работы {average_work_time:.2f}min')
     print(f"\nСтандартное отклонение времени работы рабочего: {std_hours}h {std_minutes}m")
-
+    print(f"\nTotal expenses for all workers: {total_expense:.2f} RUB.") 
     final_end_time = max(model.end_time[j].value for j in model.jobs)
 
     print(f"\nFinal End Time of Last Job: {final_end_time}")
