@@ -1,4 +1,6 @@
 from pyomo.environ import *
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.lines import Line2D
@@ -443,14 +445,81 @@ def solve_model(model, custom_data = False):
         # print(solver.solve(model, tee=True))
     else:
         print("No optimal solution found!")
+    return result.solver.status
+
+def generate_output(model):
+    start_time = datetime(year=2023, month=9, day=19, hour=8)
+    
+    def convert_to_datetime(minutes_since_start):
+        return start_time + timedelta(minutes=minutes_since_start)
+    
+    output_data = {}
+
+    # Project Deadlines and End Times
+    project_end_times = []
+    for p, job_list_and_deadline in project_data.items():
+        job_list = job_list_and_deadline[0]
+        deadline = job_list_and_deadline[1]
+        project_end_time = max(model.end_time[j].value for j in job_list)
+
+        formatted_deadline = convert_to_datetime(deadline).strftime('%H:%M')
+        formatted_end_time = convert_to_datetime(project_end_time).strftime('%H:%M')
+        
+        project_end_times.append({'project': p, 'end_time': formatted_end_time, 'deadline': formatted_deadline})
+
+    output_data['projects'] = project_end_times
+
+    # Worker Performance and Costs
+    worker_details = []
+    total_expense = 0
+    for k in model.workers:
+        assigned_jobs_count = sum(model.worker_assigned[j, k].value for j in model.jobs)
+        total_minutes = sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs)
+        hours = total_minutes // 60
+        minutes = total_minutes % 60
+        worker_cost = total_minutes * model.cost_rate[k]
+        total_expense += worker_cost
+
+        worker_details.append({
+            'worker_id': k,
+            'specialization': workers_data[k][0],
+            'total_time': f"{hours}h {minutes}m",
+            'tasks_assigned': int(assigned_jobs_count),
+            'cost': f"{worker_cost:.2f} RUB"
+        })
+
+    output_data['workers'] = worker_details
+
+    # Additional Info
+    worker_times = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
+    average_work_time = sum(worker_times) / len(model.workers)
+    variance = sum((time - average_work_time) ** 2 for time in worker_times) / len(model.workers)
+    std_deviation = variance ** 0.5
+    std_hours = int(std_deviation // 60)
+    std_minutes = int(std_deviation % 60)
+
+    final_end_time = max(model.end_time[j].value for j in model.jobs)
+    final_time = start_time + timedelta(minutes=final_end_time)
+    objective_value = model.obj.expr()
+
+    output_data['additional_info'] = {
+        'average_work_time': f"{average_work_time:.2f}min",
+        'std_deviation': f"{std_hours}h {std_minutes}m",
+        'total_expense': f"{total_expense:.2f} RUB",
+        'final_end_time': final_time.strftime('%Y-%m-%d %H:%M'),
+        'objective_value': f"{objective_value}"
+    }
+
+    return output_data
 
 
-def plot_schedule(model):
+
+def plot_schedule(model, show=True):
     tasks = []
     starts = []
     ends = []
     title = 'Base Schedule'
-    colors = plt.cm.viridis(np.linspace(0, 1, len(project_data)))
+    colors = plt.cm.Paired(np.linspace(0, 1, len(project_data)))
 
     for j in model.jobs:
         for k in model.workers:
@@ -459,7 +528,7 @@ def plot_schedule(model):
                 starts.append(model.start_time[j].value)
                 ends.append(model.start_time[j].value + jobs_data[j][1])
 
-    fig, ax = plt.subplots(figsize=(10, len(model.workers) * 0.6))  # уменьшим высоту каждого рабочего для лучшего масштабирования
+    fig, ax = plt.subplots(figsize=(16, len(model.workers) * 0.6))  # уменьшим высоту каждого рабочего для лучшего масштабирования
 
     for idx, k in enumerate(model.workers):
         assigned_jobs = [(j, model.start_time[j].value, model.start_time[j].value + jobs_data[j][1]) for j in model.jobs if model.worker_assigned[j, k].value > 0.5]
@@ -469,20 +538,25 @@ def plot_schedule(model):
             ax.broken_barh([(job[1], job[2] - job[1])], (idx*0.6, 0.5), facecolors=(colors[project_id % len(colors)]))
             duration = jobs_data[job[0]][1]
             job_name = jobs_data[job[0]][0]
-            ax.text((2*job[1] + duration) / 2, idx*0.6 + 0.25, f"{job_name} ({duration}m)", ha='center', va='center', color='white', fontsize=6)
+            ax.text((2*job[1] + duration) / 2, idx*0.6 + 0.25, f"{job_name} ({duration}m)", ha='center', va='center', color='black', fontsize=12)
 
-    ax.set_xlabel('Time')
-    ax.set_ylabel('Workers')
+    ax.set_xlabel('Time', fontsize=14)
+    ax.set_ylabel('Workers', fontsize=14)
     ax.set_yticks([idx*0.6 + 0.25 for idx in range(len(model.workers))])
-    ax.set_yticklabels([f"Worker {k}" for k in model.workers], fontsize=8)
+    ax.set_yticklabels([f"Worker {k}" for k in model.workers], fontsize=12)
     ax.grid(True)
 
     legend_elements = [Patch(facecolor=colors[i % len(colors)], edgecolor='gray', label=f'Project {i}') for i in project_data.keys()]
     ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1))
 
-    ax.set_title(title)
+    ax.set_title(title, fontsize=16)
     plt.tight_layout()
-    plt.show()
+    if show:
+        plt.show()
+    else:
+        plt.tight_layout()
+        fig.savefig("static/schedule_plot.png")
+        plt.close()
 
 
 
@@ -548,7 +622,7 @@ def plot_worker_load(model):
     total_hours = [t / 60 for t in total_times]
 
     # Create subplots with 2 y-axes
-    fig, ax1 = plt.subplots(figsize=(15, 6))  # Увеличиваем размер фигуры
+    fig, ax1 = plt.subplots(figsize=(16, 6))  # Увеличиваем размер фигуры
     ax2 = ax1.twinx()
 
     # Plot total hours on the first y-axis
@@ -569,7 +643,7 @@ def plot_worker_load(model):
 
 
 
-def plot_worker_utilization(model):
+def plot_worker_utilization(model, show=True):
     title = "Worker Utilization and Assigned Jobs"
     worker_names = [f"Worker {k}" for k in model.workers]
     total_minutes = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
@@ -581,7 +655,7 @@ def plot_worker_utilization(model):
 
     # Bar plot for total working time
     bars = ax1.bar(worker_names, total_minutes, color='blue', label='Total Working Time (min)', alpha=0.6)
-    ax1.set_ylabel('Total Working Time (min)', color='blue')
+    ax1.set_ylabel('Total Working Time (min)', color='blue', fontsize=14)
     ax1.set_ylim(0, max_time + 50)
     ax1.axhline(max_time, color="red", linestyle="--", label="Max Available Time")
     ax1.set_xticklabels(worker_names, rotation=45, ha='right')  # Поворачиваем метки x-оси
@@ -594,16 +668,20 @@ def plot_worker_utilization(model):
     # Plotting total assigned jobs on the right y-axis
     ax2 = ax1.twinx()
     ax2.plot(worker_names, assigned_jobs_counts, color='green', marker='o', label='Assigned Jobs Count', linestyle='--')
-    ax2.set_ylabel('Number of Assigned Jobs', color='green')
+    ax2.set_ylabel('Number of Assigned Jobs', color='green', fontsize=14)
     for i, txt in enumerate(assigned_jobs_counts):
         ax2.annotate(txt, (worker_names[i], assigned_jobs_counts[i] + 0.5), color='green', ha='center')
 
     # Legends and titles
     fig.tight_layout()
     fig.legend(loc="upper left", bbox_to_anchor=(0.05, 1))
-    ax1.set_title(title)
-
-    plt.show()
+    ax1.set_title(title, fontsize=16)
+    if show:
+        plt.show()
+    else:
+        plt.tight_layout()
+        fig.savefig("static/utilization_plot.png")
+        plt.close()
 
 
 

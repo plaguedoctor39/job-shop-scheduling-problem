@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Results</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="container mt-4">
+
+    <h1 class="mb-4">Model Results</h1>
+
+    <h3>Project Deadlines and End Times</h3>
+    <table class="table table-bordered table-hover">
+        <thead class="thead-light">
+            <tr>
+                <th>Project ID</th>
+                <th>End Time</th>
+                <th>Deadline</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+            <tr>
+                <td>{{ project.project }}</td>
+                <td>{{ project.end_time }}</td>
+                <td>{{ project.deadline }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Worker Performance and Costs</h3>
+    <table class="table table-bordered table-hover">
+        <thead class="thead-light">
+            <tr>
+                <th>Worker ID</th>
+                <th>Specialization</th>
+                <th>Total Time</th>
+                <th>Tasks Assigned</th>
+                <th>Cost</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for worker in workers %}
+            <tr>
+                <td>{{ worker.worker_id }}</td>
+                <td>{{ worker.specialization }}</td>
+                <td>{{ worker.total_time }}</td>
+                <td>{{ worker.tasks_assigned }}</td>
+                <td>{{ worker.cost }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Additional Information</h3>
+    <ul>
+        <li>Average Work Time: {{ additional_info.average_work_time }}</li>
+        <li>Standard Deviation of Work Time: {{ additional_info.std_deviation }}</li>
+        <li>Total Expense: {{ additional_info.total_expense }}</li>
+        <li>Final End Time of Last Job: {{ additional_info.final_end_time }}</li>
+        <li>Value of the Objective Function: {{ additional_info.objective_value }}</li>
+    </ul>
+
+
+
+
+
+    
+    <!-- Вставка графика schedule_plot.png -->
+    <h2>Schedule Plot</h2>
+    <img src="/static/schedule_plot.png" alt="Schedule Plot">
+
+    <!-- Вставка графика utilization_plot.png -->
+    <h2>Worker Utilization Plot</h2>
+    <img src="/static/utilization_plot.png" alt="Worker Utilization Plot">
+
+    <a href="{{ url_for('index') }}" class="btn btn-primary mt-4">Back to Model Builder</a>
+</body>
+</html>
