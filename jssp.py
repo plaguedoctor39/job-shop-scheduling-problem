@@ -139,7 +139,7 @@ for j in jobs_data.keys():
     if j not in task_to_project:
         print(f"Job {j} is not assigned to any project!")
 
-def build_model(weight_balance, weight_makespan, weight_costs=1):
+def build_model(weight_balance, weight_makespan, weight_costs=1, hard_deadline=False):
     start_time = time.time()
 
     model = ConcreteModel()
@@ -316,7 +316,11 @@ def build_model(weight_balance, weight_makespan, weight_costs=1):
 
     def project_delay_rule(model, p):
         last_task = project_data[p][0][-1]
-        return model.end_time[last_task] <= project_data[p][1] + model.project_delay[p]
+        if hard_deadline:
+            return model.end_time[last_task] <= project_data[p][1]
+        else:
+            return model.end_time[last_task] <= project_data[p][1] + model.project_delay[p]
+
 
 
     model.project_delay_constr = Constraint(model.projects, rule=project_delay_rule)
@@ -353,90 +357,92 @@ def solve_model(model, custom_data = False):
 
 
 
-
-    # Print the solution
-    print("\nWorker Assignments with Order:")
-    for k in model.workers:
-        assigned_jobs = [(j, model.start_time[j].value) for j in model.jobs if model.worker_assigned[j, k].value > 0.5]
-        sorted_jobs = sorted(assigned_jobs, key=lambda x: x[1])  
-        if sorted_jobs:
-            job_sequence = " -> ".join(str(job[0]) for job in sorted_jobs)
-            print(f"Worker {k} has tasks: {job_sequence}")
-        else:
-            print(f"Worker {k} has no tasks assigned.")
-
-
-    print("Work assignments:")
-    for i in model.jobs:
+    if (result.solver.status == SolverStatus.ok) and (result.solver.termination_condition == TerminationCondition.optimal):
+        # Print the solution
+        print("\nWorker Assignments with Order:")
         for k in model.workers:
-            if model.worker_assigned[i, k].value > 0.5:  # Проверяем назначен ли рабочий на задачу
-                print(f"Job {i} is assigned to worker {k} at start time {model.start_time[i].value} and end time {model.end_time[i].value}")
+            assigned_jobs = [(j, model.start_time[j].value) for j in model.jobs if model.worker_assigned[j, k].value > 0.5]
+            sorted_jobs = sorted(assigned_jobs, key=lambda x: x[1])  
+            if sorted_jobs:
+                job_sequence = " -> ".join(str(job[0]) for job in sorted_jobs)
+                print(f"Worker {k} has tasks: {job_sequence}")
+            else:
+                print(f"Worker {k} has no tasks assigned.")
 
 
-    # print("\nWorker Idle Times:")
-    # for k in model.workers:
-    #     print(f"Worker {k} idle time: {model.idle_time[k].value}")
-    start_time = datetime(year=2023, month=9, day=19, hour=8)
-    def convert_to_datetime(minutes_since_start):
-        return start_time + timedelta(minutes=minutes_since_start)
-
-    print("\nProject Deadlines and End Times:")
-    for p, job_list_and_deadline in project_data.items():
-        job_list = job_list_and_deadline[0]
-        deadline = job_list_and_deadline[1]
-        project_end_time = max(model.end_time[j].value for j in job_list)
-
-        formatted_deadline = convert_to_datetime(deadline).strftime('%H:%M')
-        formatted_end_time = convert_to_datetime(project_end_time).strftime('%H:%M')
-        
-        print(f"Project {p} ends at: {formatted_end_time}. Deadline: {formatted_deadline}.")
-
-    total_expense = 0  # Переменная для подсчета общих затрат
-
-    print("\nWorker Performance and Costs:")
-    for k in model.workers:
-        assigned_jobs_count = sum(model.worker_assigned[j, k].value for j in model.jobs)
-        total_minutes = sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs)
-        hours = total_minutes // 60
-        minutes = total_minutes % 60
-        worker_cost = total_minutes * model.cost_rate[k]  # Рассчитываем затраты для рабочего
-        total_expense += worker_cost  # Добавляем затраты рабочего к общим затратам
-        print(f"Worker {k} ({workers_data[k]}) worked for total time: {hours}h {minutes}m, has {int(assigned_jobs_count)} tasks assigned and costs: {worker_cost:.2f} RUB.")
+        print("Work assignments:")
+        for i in model.jobs:
+            for k in model.workers:
+                if model.worker_assigned[i, k].value > 0.5:  # Проверяем назначен ли рабочий на задачу
+                    print(f"Job {i} is assigned to worker {k} at start time {model.start_time[i].value} and end time {model.end_time[i].value}")
 
 
-    for j in model.jobs:
+        # print("\nWorker Idle Times:")
+        # for k in model.workers:
+        #     print(f"Worker {k} idle time: {model.idle_time[k].value}")
+        start_time = datetime(year=2023, month=9, day=19, hour=8)
+        def convert_to_datetime(minutes_since_start):
+            return start_time + timedelta(minutes=minutes_since_start)
+
+        print("\nProject Deadlines and End Times:")
+        for p, job_list_and_deadline in project_data.items():
+            job_list = job_list_and_deadline[0]
+            deadline = job_list_and_deadline[1]
+            project_end_time = max(model.end_time[j].value for j in job_list)
+
+            formatted_deadline = convert_to_datetime(deadline).strftime('%H:%M')
+            formatted_end_time = convert_to_datetime(project_end_time).strftime('%H:%M')
+            
+            print(f"Project {p} ends at: {formatted_end_time}. Deadline: {formatted_deadline}.")
+
+        total_expense = 0  # Переменная для подсчета общих затрат
+
+        print("\nWorker Performance and Costs:")
         for k in model.workers:
-            if model.worker_assigned[j, k].value == 1:  # Если рабочий k назначен на задачу j
-                print(f"Рабочий {k}, Специализация: {workers_data[k][0]}, Задача: {j}, Требуемый разряд: {jobs_data[j][3]}, Разряд рабочего: {workers_data[k][1]}")
+            assigned_jobs_count = sum(model.worker_assigned[j, k].value for j in model.jobs)
+            total_minutes = sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs)
+            hours = total_minutes // 60
+            minutes = total_minutes % 60
+            worker_cost = total_minutes * model.cost_rate[k]  # Рассчитываем затраты для рабочего
+            total_expense += worker_cost  # Добавляем затраты рабочего к общим затратам
+            print(f"Worker {k} ({workers_data[k]}) worked for total time: {hours}h {minutes}m, has {int(assigned_jobs_count)} tasks assigned and costs: {worker_cost:.2f} RUB.")
 
-    # Список времени работы для каждого рабочего
-    worker_times = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
 
-    # Вычисляем среднее время работы
-    average_work_time = sum(worker_times) / len(model.workers)
+        for j in model.jobs:
+            for k in model.workers:
+                if model.worker_assigned[j, k].value == 1:  # Если рабочий k назначен на задачу j
+                    print(f"Рабочий {k}, Специализация: {workers_data[k][0]}, Задача: {j}, Требуемый разряд: {jobs_data[j][3]}, Разряд рабочего: {workers_data[k][1]}")
 
-    # Вычисляем стандартное отклонение
-    variance = sum((time - average_work_time) ** 2 for time in worker_times) / len(model.workers)
-    std_deviation = variance ** 0.5
+        # Список времени работы для каждого рабочего
+        worker_times = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
 
-    # Конвертируем стандартное отклонение в часы и минуты
-    std_hours = int(std_deviation // 60)
-    std_minutes = int(std_deviation % 60)
-    print('')
-    print(f'Среднее время работы {average_work_time:.2f}min')
-    print(f"\nСтандартное отклонение времени работы рабочего: {std_hours}h {std_minutes}m")
-    print(f"\nTotal expenses for all workers: {total_expense:.2f} RUB.") 
-    final_end_time = max(model.end_time[j].value for j in model.jobs)
-    final_time = start_time + timedelta(minutes=final_end_time)
+        # Вычисляем среднее время работы
+        average_work_time = sum(worker_times) / len(model.workers)
 
-    print(f"\nFinal End Time of Last Job: {final_time.strftime('%Y-%m-%d %H:%M')}")
+        # Вычисляем стандартное отклонение
+        variance = sum((time - average_work_time) ** 2 for time in worker_times) / len(model.workers)
+        std_deviation = variance ** 0.5
 
-    print(f"Solve execution time: {elapsed_time:.2f} seconds")
-    objective_value = model.obj.expr()
-    print(f"Value of the objective function: {objective_value}")
+        # Конвертируем стандартное отклонение в часы и минуты
+        std_hours = int(std_deviation // 60)
+        std_minutes = int(std_deviation % 60)
+        print('')
+        print(f'Среднее время работы {average_work_time:.2f}min')
+        print(f"\nСтандартное отклонение времени работы рабочего: {std_hours}h {std_minutes}m")
+        print(f"\nTotal expenses for all workers: {total_expense:.2f} RUB.") 
+        final_end_time = max(model.end_time[j].value for j in model.jobs)
+        final_time = start_time + timedelta(minutes=final_end_time)
 
-    # If you wish to see the complete status and log of the solver
-    # print(solver.solve(model, tee=True))
+        print(f"\nFinal End Time of Last Job: {final_time.strftime('%Y-%m-%d %H:%M')}")
+
+        print(f"Solve execution time: {elapsed_time:.2f} seconds")
+        objective_value = model.obj.expr()
+        print(f"Value of the objective function: {objective_value}")
+
+        # If you wish to see the complete status and log of the solver
+        # print(solver.solve(model, tee=True))
+    else:
+        print("No optimal solution found!")
 
 
 def plot_schedule(model):
