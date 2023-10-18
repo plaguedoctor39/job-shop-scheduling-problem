@@ -1,6 +1,5 @@
 from pyomo.environ import *
 import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.lines import Line2D
@@ -515,6 +514,12 @@ def generate_output(model):
 
 
 def plot_schedule(model, show=True):
+
+    if show:
+        pass
+    else:
+        # Если мы сохраняем график как изображение (веб-версия)
+        matplotlib.use('agg')
     tasks = []
     starts = []
     ends = []
@@ -550,7 +555,7 @@ def plot_schedule(model, show=True):
     ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1))
 
     ax.set_title(title, fontsize=16)
-    plt.tight_layout()
+    # plt.tight_layout()
     if show:
         plt.show()
     else:
@@ -644,6 +649,11 @@ def plot_worker_load(model):
 
 
 def plot_worker_utilization(model, show=True):
+    if show:
+        pass
+    else:
+        # Если мы сохраняем график как изображение (веб-версия)
+        matplotlib.use('agg')
     title = "Worker Utilization and Assigned Jobs"
     worker_names = [f"Worker {k}" for k in model.workers]
     total_minutes = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
