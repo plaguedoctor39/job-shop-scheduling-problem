@@ -22,23 +22,24 @@ def load_model(filename):
 random.seed(12345)
 
 workers_data = {
-    1: ("Токарно-винторезная", 1, 50),
-    2: ("Слесарная", 1, 50),
-    3: ("Вертикально-сверлильная", 1, 50),
-    4: ("Токарная с ЧПУ", 1, 50),
-    5: ("Токарно-винторезная", 2, 55),
-    6: ("Слесарная", 2, 55),
-    7: ("Вертикально-сверлильная", 2, 55),
-    8: ("Токарная с ЧПУ", 2, 55),
-    9: ("Токарно-винторезная", 3, 60),
-    10: ("Слесарная", 3, 60),
-    11: ("Вертикально-сверлильная", 3, 60),
-    12: ("Токарная с ЧПУ", 3, 60),
-    13: ("Токарно-винторезная", 4, 65),
-    14: ("Слесарная", 4, 65),
-    15: ("Вертикально-сверлильная", 4, 65),
-    16: ("Токарная с ЧПУ", 4, 65),
+    1: ("Токарно-винторезная", 1, 50, None),
+    2: ("Слесарная", 1, 50, None),
+    3: ("Вертикально-сверлильная", 1, 50, None),
+    4: ("Токарная с ЧПУ", 1, 50, None),
+    5: ("Токарно-винторезная", 2, 55, None),
+    6: ("Слесарная", 2, 55, None),
+    7: ("Вертикально-сверлильная", 2, 55, None), 
+    8: ("Токарная с ЧПУ", 2, 55, None),
+    9: ("Токарно-винторезная", 3, 60, None),
+    10: ("Слесарная", 3, 60, (9 * 60, 9.40 * 60)),
+    11: ("Вертикально-сверлильная", 3, 60, None), 
+    12: ("Токарная с ЧПУ", 3, 60, None),
+    13: ("Токарно-винторезная", 4, 65, None),
+    14: ("Слесарная", 4, 65, None), 
+    15: ("Вертикально-сверлильная", 4, 65, None),
+    16: ("Токарная с ЧПУ", 4, 65, None),
 }
+
 
 jobs_data = {
     15: ("Токарно-винторезная", 5, [], 1),
@@ -168,7 +169,7 @@ def build_model(weight_balance, weight_makespan, weight_costs=1, hard_deadline=F
     model.worker_qualification = Param(model.workers, initialize={k: v[1] for k, v in workers_data.items()})
     model.job_required_qualification = Param(model.jobs, initialize={k: v[3] for k, v in jobs_data.items()})
     model.cost_rate = Param(model.workers, initialize={k: v[2] for k, v in workers_data.items()})
-
+    model.worker_unavailability = Param(model.workers, initialize={k: v[3] for k, v in workers_data.items()})
 
     # Variables
     model.start_time = Var(model.jobs, domain=NonNegativeReals)
@@ -321,10 +322,27 @@ def build_model(weight_balance, weight_makespan, weight_costs=1, hard_deadline=F
             return model.end_time[last_task] <= project_data[p][1]
         else:
             return model.end_time[last_task] <= project_data[p][1] + model.project_delay[p]
-
-
-
     model.project_delay_constr = Constraint(model.projects, rule=project_delay_rule)
+
+    def before_unavailability_rule(model, j, k):
+        if model.worker_unavailability[k]:
+            start_unavail, end_unavail = model.worker_unavailability[k]
+            print()
+            # Если рабочий назначен на задание, то задание должно завершиться до начала периода недоступности
+            return model.start_time[j] + model.job_duration[j] * model.worker_assigned[j, k] <= start_unavail
+        else:
+            return Constraint.Skip
+
+    def after_unavailability_rule(model, j, k):
+        if model.worker_unavailability[k]:
+            start_unavail, end_unavail = model.worker_unavailability[k]
+            # Если рабочий назначен на задание, то задание должно начаться после периода недоступности
+            return model.start_time[j] - end_unavail * model.worker_assigned[j, k] >= 0
+        else:
+            return Constraint.Skip
+    model.before_unavailability_constraints = Constraint(model.jobs, model.workers, rule=before_unavailability_rule)
+    model.after_unavailability_constraints = Constraint(model.jobs, model.workers, rule=after_unavailability_rule)
+
 
 
     model.write(filename='model.mps', format=ProblemFormat.mps)
