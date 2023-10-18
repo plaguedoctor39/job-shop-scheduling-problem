@@ -18,6 +18,8 @@ def index():
         
         # Создаем и решаем модель
         model = build_model(param1, param2, param3, hard_deadline=hard_deadline)
+        model.start_time[120].set_value(60)
+        model.start_time[120].fix()  
         result = solve_model(model)
         
         if not result:
