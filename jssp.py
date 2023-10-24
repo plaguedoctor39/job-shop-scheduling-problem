@@ -9,58 +9,96 @@ import random
 import numpy as np
 import time
 import pickle
+import cloudpickle
 from datetime import datetime, timedelta
-
-def save_model(model, filename):
-    with open(filename, 'wb') as file:
-        pickle.dump(model, file)
-
-def load_model(filename):
-    with open(filename, 'rb') as file:
-        return pickle.load(file)
+import json
+import plotly
+import plotly.graph_objects as go
+import plotly.figure_factory as ff
+import plotly.express as px
+import pandas as pd
+from plotly.subplots import make_subplots
 
 random.seed(12345)
 
-workers_data = {
-    1: ("Токарно-винторезная", 1, 50, None),
-    2: ("Слесарная", 1, 50, None),
-    3: ("Вертикально-сверлильная", 1, 50, None),
-    4: ("Токарная с ЧПУ", 1, 50, None),
-    5: ("Токарно-винторезная", 2, 55, None),
-    6: ("Слесарная", 2, 55, None),
-    7: ("Вертикально-сверлильная", 2, 55, None), 
-    8: ("Токарная с ЧПУ", 2, 55, None),
-    9: ("Токарно-винторезная", 3, 60, None),
-    10: ("Слесарная", 3, 60, (9 * 60, 9.40 * 60)),
-    11: ("Вертикально-сверлильная", 3, 60, None), 
-    12: ("Токарная с ЧПУ", 3, 60, None),
-    13: ("Токарно-винторезная", 4, 65, None),
-    14: ("Слесарная", 4, 65, None), 
-    15: ("Вертикально-сверлильная", 4, 65, None),
-    16: ("Токарная с ЧПУ", 4, 65, None),
-}
+# workers_data = {
+#     1: ("Токарно-винторезная", "Токарь", 1, 50, None),
+#     2: ("Слесарная", "Слесарь", 1, 50, None),
+#     3: ("Вертикально-сверлильная", "Сверловщик", 1, 50, None),
+#     4: ("Токарная с ЧПУ", "Токарь с ЧПУ", 1, 50, None),
+#     5: ("Токарно-винторезная", "Токарь", 2, 55, None),
+#     6: ("Слесарная", "Слесарь", 2, 55, None),
+#     7: ("Вертикально-сверлильная", "Сверловщик", 2, 55, None),
+#     8: ("Токарная с ЧПУ", "Токарь с ЧПУ", 2, 55, None),
+#     9: ("Токарно-винторезная", "Токарь", 3, 60, None),
+#     10: ("Слесарная", "Слесарь", 3, 60, (9 * 60, 9.40 * 60)),
+#     11: ("Вертикально-сверлильная", "Сверловщик", 3, 60, None),
+#     12: ("Токарная с ЧПУ", "Токарь с ЧПУ", 3, 60, None),
+#     13: ("Токарно-винторезная", "Токарь", 4, 65, None),
+#     14: ("Слесарная", "Слесарь", 4, 65, None),
+#     15: ("Вертикально-сверлильная", "Сверловщик", 4, 65, None),
+#     16: ("Токарная с ЧПУ", "Токарь с ЧПУ", 4, 65, None),
+#     17: ("Токарно-винторезная", "Токарь", 5, 70, None),
+#     18: ("Слесарная", "Слесарь", 5, 70, None),
+#     19: ("Вертикально-сверлильная", "Сверловщик", 5, 70, None),
+#     20: ("Токарная с ЧПУ", "Токарь с ЧПУ", 5, 70, None),
+# }
 
+# jobs_data = {
+#     15: ("Токарно-винторезная", 5, [], 1),
+#     25: ("Токарная с ЧПУ", 15, [15], 1),
+#     35: ("Токарная с ЧПУ", 20, [25], 2),
+#     45: ("Вертикально-сверлильная", 10, [35], 1),
+#     55: ("Слесарная", 50, [45], 3),
+#     65: ("Токарно-винторезная", 15, [], 2),
+#     75: ("Токарная с ЧПУ", 20, [65], 2),
+#     85: ("Токарная с ЧПУ", 25, [75], 3),
+#     95: ("Вертикально-сверлильная", 15, [85], 1),
+#     105: ("Слесарная", 55, [95], 3),
+#     115: ("Токарно-винторезная", 20, [], 2),
+#     125: ("Токарная с ЧПУ", 25, [115], 3),
+#     135: ("Токарная с ЧПУ", 30, [125], 4),
+#     145: ("Вертикально-сверлильная", 20, [135], 2),
+#     155: ("Слесарная", 60, [145], 4),
+#     165: ("Токарно-винторезная", 25, [], 3),
+#     175: ("Токарная с ЧПУ", 30, [165], 4),
+#     185: ("Токарная с ЧПУ", 35, [175], 5),
+#     195: ("Вертикально-сверлильная", 25, [185], 3),
+#     205: ("Слесарная", 65, [195], 5),
+#     215: ("Токарно-винторезная", 30, [], 4),
+#     225: ("Токарная с ЧПУ", 35, [215], 5),
+#     235: ("Токарная с ЧПУ", 40, [225], 1),
+#     245: ("Вертикально-сверлильная", 30, [235], 4),
+#     255: ("Слесарная", 70, [245], 2),
+#     265: ("Токарно-винторезная", 35, [], 5),
+#     275: ("Токарная с ЧПУ", 40, [265], 1),
+#     285: ("Токарная с ЧПУ", 45, [275], 2),
+#     295: ("Вертикально-сверлильная", 35, [285], 5),
+#     305: ("Слесарная", 75, [295], 1),
+# }
 
-jobs_data = {
-    15: ("Токарно-винторезная", 5, [], 1),
-    25: ("Токарная с ЧПУ", 15, [15], 1),
-    35: ("Токарная с ЧПУ", 20, [25], 2),
-    45: ("Вертикально-сверлильная", 10, [35], 1),
-    55: ("Слесарная", 50, [45], 3),
-    100: ("Токарно-винторезная", 10, [], 2),
-    110: ("Слесарная", 25, [100], 2),
-    120: ("Токарно-винторезная", 35, [], 3),
-    130: ("Слесарная", 30, [120], 4),
-    140: ("Токарная с ЧПУ", 5, [130], 3),
-    150: ("Вертикально-сверлильная", 10, [140], 3),
-}
+# project_data = {
+#     1: ([15, 25, 35, 45, 55], 2 * 60),
+#     2: ([65, 75, 85, 95, 105], 8 * 60),
+#     3: ([115, 125, 135, 145, 155], 3 * 60),
+#     4: ([165, 175, 185, 195, 205], 4 * 60),
+#     5: ([215, 225, 235, 245, 255], 5 * 60),
+#     6: ([265, 275, 285, 295, 305], 6 * 60)
+# }
 
-project_data = {
-        1: ([15, 25, 35, 45, 55], 2 * 60),
-        2: ([100, 110], 8 * 60),
-        3: ([120, 130, 140, 150], 3 * 60)
-    }
+# with open('data.json', 'w', encoding='utf-8') as file:
+#     json.dump({
+#         'workers_data': workers_data,
+#         'jobs_data': jobs_data,
+#         'project_data': project_data
+#     }, file, ensure_ascii=False, indent=4)
 
+with open('data.json', 'r', encoding='utf-8') as file:
+    data = json.load(file)
+
+workers_data = {int(k): v for k, v in data['workers_data'].items()}
+jobs_data = {int(k): v for k, v in data['jobs_data'].items()}
+project_data = {int(k): v for k, v in data['project_data'].items()}
 
 
 def gen_data():
@@ -141,7 +179,7 @@ for j in jobs_data.keys():
     if j not in task_to_project:
         print(f"Job {j} is not assigned to any project!")
 
-def build_model(weight_balance, weight_makespan, weight_costs=1, hard_deadline=False):
+def build_model(weight_balance, weight_makespan, weight_costs=1, weight_workers=1, hard_deadline=False):
     start_time = time.time()
 
     model = ConcreteModel()
@@ -166,10 +204,10 @@ def build_model(weight_balance, weight_makespan, weight_costs=1, hard_deadline=F
     model.predecessors = Param(model.jobs, within=Any, initialize={k: v[2] for k, v in jobs_data.items()})
     
     model.task_to_project = Param(model.jobs, initialize=task_to_project)
-    model.worker_qualification = Param(model.workers, initialize={k: v[1] for k, v in workers_data.items()})
+    model.worker_qualification = Param(model.workers, initialize={k: v[2] for k, v in workers_data.items()})
     model.job_required_qualification = Param(model.jobs, initialize={k: v[3] for k, v in jobs_data.items()})
-    model.cost_rate = Param(model.workers, initialize={k: v[2] for k, v in workers_data.items()})
-    model.worker_unavailability = Param(model.workers, initialize={k: v[3] for k, v in workers_data.items()})
+    model.cost_rate = Param(model.workers, initialize={k: v[3] for k, v in workers_data.items()})
+    model.worker_unavailability = Param(model.workers, initialize={k: v[4] for k, v in workers_data.items()})
 
     # Variables
     model.start_time = Var(model.jobs, domain=NonNegativeReals)
@@ -210,12 +248,12 @@ def build_model(weight_balance, weight_makespan, weight_costs=1, hard_deadline=F
     model.obj = Objective(
         expr=weight_balance * (model.max_work_time - model.min_work_time) +
             weight_makespan * sum(model.end_time[j] for j in model.jobs) +
-            sum(model.worker_deviation[k] * model.worker_deviation[k] for k in model.workers) +
+            # sum(model.worker_deviation[k] * model.worker_deviation[k] for k in model.workers) +
             weight_costs * sum(model.worker_assigned[j, k] * model.job_duration[j] * model.cost_rate[k] for j in model.jobs for k in model.workers) +
-            weight_delay * sum(model.project_delay[p] for p in model.projects),
+            weight_delay * sum(model.project_delay[p] for p in model.projects) - 
+            weight_workers * sum(model.worker_used[k] for k in model.workers),
         sense=minimize
     )
-
 
 
 
@@ -346,6 +384,7 @@ def build_model(weight_balance, weight_makespan, weight_costs=1, hard_deadline=F
 
 
     model.write(filename='model.mps', format=ProblemFormat.mps)
+    # model.write("model.nl")
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"Build execution time: {elapsed_time:.2f} seconds")
@@ -363,7 +402,7 @@ def solve_model(model, custom_data = False):
             model.worker_assigned[key].set_value(value)
             model.worker_assigned[key].fix()
     start_time = time.time()
-    solver = SolverFactory('scip')
+    solver = SolverFactory('appsi_highs')
     # solver.options['threads'] = 6
     # solver.options['set/lp/initalgorithm'] = 'd'
     # solver.options['warmstart'] = True
@@ -529,57 +568,93 @@ def generate_output(model):
 
     return output_data
 
+def time_label(t):
+    """Convert time in minutes since 8am to a HH:MM format."""
+    h, m = divmod(t + 8*60, 60)  # Add 8 hours (since the day starts at 8am)
+    return f"{int(h) % 24:02}:{int(m):02}"  # % 24 is used to wrap around hours greater than 24
 
 
-def plot_schedule(model, show=True):
+def plot_schedule(model, show=True, mode='workers'):
 
-    if show:
-        pass
-    else:
+    offset = 8 * 60  # 8 hours in minutes
+
+
+    if not show:
         # Если мы сохраняем график как изображение (веб-версия)
-        matplotlib.use('agg')
-    tasks = []
-    starts = []
-    ends = []
-    title = 'Base Schedule'
+        plt.switch_backend('agg')
+
+    fig, ax = plt.subplots(figsize=(16, 8))
     colors = plt.cm.Paired(np.linspace(0, 1, len(project_data)))
+    assigned_workers = set()
 
-    for j in model.jobs:
-        for k in model.workers:
-            if model.worker_assigned[j, k].value > 0.5:
-                tasks.append(f"Job {j} by Worker {k}")
-                starts.append(model.start_time[j].value)
-                ends.append(model.start_time[j].value + jobs_data[j][1])
+    if mode == 'workers':
+        # График по рабочим
+        for idx, k in enumerate(model.workers):
+            
+            # Визуализация недоступности рабочего
+            unavailability = model.worker_unavailability[k]
+            if unavailability is not None:
+                adjusted_start = unavailability[0] - offset
+                adjusted_end = unavailability[1] - offset
+                duration = adjusted_end - adjusted_start
+                ax.broken_barh([(adjusted_start, duration)], (idx, 1), facecolors='grey', alpha=0.5)
 
-    fig, ax = plt.subplots(figsize=(16, len(model.workers) * 0.6))  # уменьшим высоту каждого рабочего для лучшего масштабирования
+                mid_point = (adjusted_start + adjusted_end) / 2
+                time_str = f"{time_label(adjusted_start)} - {time_label(adjusted_end)}"
+                ax.text(mid_point, idx + 0.5, time_str, ha='center', va='center', color='black', fontsize=10)
 
-    for idx, k in enumerate(model.workers):
-        assigned_jobs = [(j, model.start_time[j].value, model.start_time[j].value + jobs_data[j][1]) for j in model.jobs if model.worker_assigned[j, k].value > 0.5]
-        sorted_jobs = sorted(assigned_jobs, key=lambda x: x[1])
-        for job in sorted_jobs:
-            project_id = task_to_project[job[0]]
-            ax.broken_barh([(job[1], job[2] - job[1])], (idx*0.6, 0.5), facecolors=(colors[project_id % len(colors)]))
-            duration = jobs_data[job[0]][1]
-            job_name = jobs_data[job[0]][0]
-            ax.text((2*job[1] + duration) / 2, idx*0.6 + 0.25, f"{job_name} ({duration}m)", ha='center', va='center', color='black', fontsize=12)
+            for j in model.jobs:
+                if model.worker_assigned[j, k].value > 0.5:
+                    start = model.start_time[j].value
+                    duration = model.job_duration[j]
+                    project_id = model.task_to_project[j]
+                    ax.broken_barh([(start, duration)], (idx, 1), facecolors=(colors[project_id % len(colors)]))
+                    ax.text(start + 0.5*duration, idx + 0.5, f"{jobs_data[j][0]} ({duration}m, Разряд {model.job_required_qualification[j]})", ha='center', va='center', color='black')
+        
+        ax.set_yticks(range(len(model.workers)))
+        ax.set_yticklabels([f"ID {k}: {workers_data[k][1]}, Разряд {model.worker_qualification[k]}" for k in model.workers])
 
-    ax.set_xlabel('Time', fontsize=14)
-    ax.set_ylabel('Workers', fontsize=14)
-    ax.set_yticks([idx*0.6 + 0.25 for idx in range(len(model.workers))])
-    ax.set_yticklabels([f"Worker {k}" for k in model.workers], fontsize=12)
-    ax.grid(True)
+    
+    elif mode == 'projects':
+        # График по проектам
+        worker_colors = plt.cm.Paired(np.linspace(0, 1, len(model.workers)))
+        for idx, p in enumerate(project_data.keys()):
+            for j in [j for j, proj in task_to_project.items() if proj == p]:
+                for k in model.workers:
+                    if model.worker_assigned[j, k].value > 0.5:
+                        start = model.start_time[j].value
+                        duration = jobs_data[j][1]
+                        worker_list = list(model.workers)
+                        ax.broken_barh([(start, duration)], (idx, 1), facecolors=(worker_colors[worker_list.index(k) % len(worker_colors)]))
+                        assigned_workers.add(k) 
+                        # ax.text(start + 0.5*duration, idx + 0.5, f"{jobs_data[j][0]} ({duration}m), Worker {k}", ha='center', va='center', color='black')
 
-    legend_elements = [Patch(facecolor=colors[i % len(colors)], edgecolor='gray', label=f'Project {i}') for i in project_data.keys()]
+        ax.set_yticks(range(len(project_data)))
+        ax.set_yticklabels([f"Project {p}" for p in project_data.keys()])
+
+
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+    ax.set_xlabel('Time')
+    max_time_value = max(model.end_time[j].value for j in model.jobs)
+    ax.set_xticks(range(0, int(max_time_value) + 10, 5))
+    ax.set_title('Schedule')
+
+    unavailability_patch = Patch(facecolor='grey', alpha=0.5, label='Worker Unavailability')
+
+    if mode == 'projects':
+        legend_elements = [unavailability_patch] + [Patch(facecolor=worker_colors[i % len(worker_colors)], label=f"{workers_data[w][1]} (ID: {w})") for i, w in enumerate(model.workers) if w in assigned_workers]
+    else:
+        legend_elements = [unavailability_patch] + [Patch(facecolor=colors[i % len(colors)], edgecolor='gray', label=f'Project {i}') for i in project_data.keys()]
+
     ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1))
 
-    ax.set_title(title, fontsize=16)
-    # plt.tight_layout()
+
     if show:
         plt.show()
     else:
-        plt.tight_layout()
-        fig.savefig("static/schedule_plot.png")
+        fig.savefig("static/schedule_plot.png", bbox_inches='tight')
         plt.close()
+
 
 
 
@@ -676,31 +751,27 @@ def plot_worker_utilization(model, show=True):
     worker_names = [f"Worker {k}" for k in model.workers]
     total_minutes = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
     assigned_jobs_counts = [sum(model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
-    max_time = 480  # 8 hours in minutes
+    max_time = 480
     utilization_percentage = [(time_spent/max_time)*100 for time_spent in total_minutes]
 
     fig, ax1 = plt.subplots(figsize=(12, 6))
 
-    # Bar plot for total working time
     bars = ax1.bar(worker_names, total_minutes, color='blue', label='Total Working Time (min)', alpha=0.6)
     ax1.set_ylabel('Total Working Time (min)', color='blue', fontsize=14)
     ax1.set_ylim(0, max_time + 50)
     ax1.axhline(max_time, color="red", linestyle="--", label="Max Available Time")
-    ax1.set_xticklabels(worker_names, rotation=45, ha='right')  # Поворачиваем метки x-оси
+    ax1.set_xticklabels(worker_names, rotation=45, ha='right')
 
-    # Displaying utilization percentage on the bars
     for idx, (util, bar) in enumerate(zip(utilization_percentage, bars)):
         height = bar.get_height()
         ax1.text(bar.get_x() + bar.get_width() / 2, height + 5, f"{util:.2f}%", ha='center', color='black', fontsize=9)
     
-    # Plotting total assigned jobs on the right y-axis
     ax2 = ax1.twinx()
     ax2.plot(worker_names, assigned_jobs_counts, color='green', marker='o', label='Assigned Jobs Count', linestyle='--')
     ax2.set_ylabel('Number of Assigned Jobs', color='green', fontsize=14)
     for i, txt in enumerate(assigned_jobs_counts):
         ax2.annotate(txt, (worker_names[i], assigned_jobs_counts[i] + 0.5), color='green', ha='center')
 
-    # Legends and titles
     fig.tight_layout()
     fig.legend(loc="upper left", bbox_to_anchor=(0.05, 1))
     ax1.set_title(title, fontsize=16)
@@ -806,6 +877,199 @@ def do_n_solutions(n, model):
         print("Solution", i+1)
         
         exclude_solution(model)
+
+
+
+
+def save_model_to_file(model, filename="model.pkl"):
+    """Сохраняет экземпляр модели в файл с использованием cloudpickle."""
+    with open(filename, mode='wb') as file:
+        cloudpickle.dump(model, file)
+
+def load_model_from_file(filename="model.pkl"):
+    """Загружает экземпляр модели из файла с использованием cloudpickle."""
+    with open(filename, mode='rb') as file:
+        model = cloudpickle.load(file)
+    return model
+    
+
+
+def convert_color(color):
+    """Конвертировать цвет из формата matplotlib в строку для plotly."""
+    r, g, b, a = color
+    return f"rgba({int(r*255)}, {int(g*255)}, {int(b*255)}, {a})"
+
+def time_to_datetime_str(base_time, minutes):
+    # Преобразование минут в соответствующую дату и время
+    new_time = base_time + timedelta(minutes=minutes)
+    return new_time.strftime('%Y-%m-%d %H:%M:%S')
+
+base_time = datetime(2023, 10, 1, 8, 0, 0) 
+
+# Размер шрифтов
+font_size = 20
+
+def plot_gantt_schedule(model, show=True, mode='workers'):
+    gantt_data = []
+
+    project_colors = [convert_color(c) for c in plt.cm.Paired(np.linspace(0, 1, len(project_data)))]
+    
+    if mode == 'workers':
+        # График по рабочим
+        grouping_column = 'Worker'
+        fig_title = "Schedule by Workers"
+        for idx, k in enumerate(model.workers):
+            unavailability = model.worker_unavailability[k]
+            if unavailability is not None:
+                task_data = dict(
+                    Worker=f'Worker {k}: {workers_data[k][1]} (Разряд {model.worker_qualification[k]})',
+                    Task=f"Worker {k}: {jobs_data[j][0]} (Разряд {model.job_required_qualification[j]})",
+                    Start=time_to_datetime_str(base_time, unavailability[0] - 8*60),
+                    Finish=time_to_datetime_str(base_time, unavailability[1] - 8*60),
+                    Resource=f"Worker unavailability",
+                    Color="grey"
+                )
+                gantt_data.append(task_data)
+            for j in model.jobs:
+                if model.worker_assigned[j, k].value > 0.5:
+                    start = time_to_datetime_str(base_time, model.start_time[j].value)
+                    finish = time_to_datetime_str(base_time, model.start_time[j].value + model.job_duration[j])
+                    project_id = model.task_to_project[j]
+                    
+                    task_data = dict(
+                        Worker=f'Worker {k}: {workers_data[k][1]} (Разряд {model.worker_qualification[k]})',
+                        Task=f"Worker {k}: {jobs_data[j][0]} (Разряд {model.job_required_qualification[j]})",
+                        Start=start,
+                        Finish=finish,
+                        Resource=f"Project {project_id}",
+                        Color=project_colors[project_id % len(project_colors)]
+                    )
+                    
+                    gantt_data.append(task_data)
+        df = pd.DataFrame(gantt_data)
+        order = sorted(df['Worker'].unique(), key=lambda x: int(x.split(" ")[1].replace(':', '')))
+    elif mode == 'projects':
+        # График по проектам
+        fig_title = "Schedule by Projects"
+        grouping_column = 'Project'
+
+        for idx, p in enumerate(project_data.keys()):
+            for j in [j for j, proj in task_to_project.items() if proj == p]:
+                start = time_to_datetime_str(base_time, model.start_time[j].value)
+                finish = time_to_datetime_str(base_time, model.start_time[j].value + model.job_duration[j])
+
+                for k in model.workers:
+                    if model.worker_assigned[j, k].value > 0.5:
+                        task_data = dict(
+                            Project=f"Project {p}",
+                            Task=f"Project {p}: {jobs_data[j][0]}",
+                            Start=start,
+                            Finish=finish,
+                            Resource=f"Worker {k}",
+                        )
+                        
+                        gantt_data.append(task_data)
+        df = pd.DataFrame(gantt_data)
+        order = sorted(df['Project'].unique(), key=lambda x: int(x.split(" ")[1]))
+    # Создаем диаграмму Ганта
+      # Преобразуем в DataFrame для удобства
+
+    # grouped = df.groupby([grouping_column]).agg({
+    #     'Start': 'min',
+    #     'Finish': 'max'
+    # }).reset_index()
+
+    
+
+    fig = px.timeline(df, 
+                  x_start="Start", 
+                  x_end="Finish", 
+                  y=grouping_column, 
+                  color="Resource", 
+                  title=fig_title,
+                  category_orders={grouping_column: order},
+                  hover_data=["Task"])
+
+    num_of_workers = len(model.workers)
+    min_start = min(model.start_time[j].value for j in model.jobs)
+    max_end = max(model.start_time[j].value + model.job_duration[j] for j in model.jobs)
+    duration_in_minutes = max_end - min_start
+
+    fig.update_layout(
+        height=num_of_workers * 100, 
+        width=duration_in_minutes * 10,
+        title_font=dict(size=font_size + 2),
+        legend_font=dict(size=font_size),
+        hoverlabel=dict(font=dict(size=font_size))
+    )
+
+    fig.update_xaxes(tickfont=dict(size=font_size))
+    fig.update_yaxes(tickfont=dict(size=font_size), title_font=dict(size=font_size + 2))
+
+    # fig.update_yaxes(categoryorder="total descending")  # Опционально: для сортировки задач
+    if show:
+        fig.show()
+    else:
+        fig_json = plotly.io.to_json(fig)
+        return fig_json
+        
+
+
+def plot_worker_utilization_interactive(model, show=True):
+
+    worker_names = [f"Worker {k}" for k in model.workers]
+    num_of_workers = len(model.workers)
+    total_minutes = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
+    assigned_jobs_counts = [sum(model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
+    max_time = 480
+    utilization_percentage = [(time_spent/max_time)*100 for time_spent in total_minutes]
+
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    fig.add_trace(
+        go.Bar(x=worker_names, y=total_minutes, name='Total Working Time (min)', text=[f"{util:.2f}%" for util in utilization_percentage], textposition='outside', marker_color='blue'),
+        secondary_y=False
+    )
+    
+    fig.add_trace(
+        go.Scatter(x=worker_names, y=assigned_jobs_counts, name='Assigned Jobs Count', mode='lines+markers+text', text=assigned_jobs_counts, textposition='top center', marker=dict(color='green')),
+        secondary_y=True
+    )
+
+    fig.update_layout(title_text="Worker Utilization and Assigned Jobs", width= num_of_workers * 100 , height=40 * len(worker_names) + 200,shapes=[
+        dict(
+            type="line",
+            x0=worker_names[0],
+            x1=worker_names[-1], 
+            y0=max_time,
+            y1=max_time,
+            line=dict(color="red", width=1.5, dash="dot")
+        )
+    ])
+    fig.add_trace(
+        go.Scatter(x=[None], y=[None], mode='lines', line=dict(color="red", width=1.5, dash="dot"), name='8 hours - End of Shift')
+    )   
+
+    fig.update_layout(title_text="Worker Utilization and Assigned Jobs", title_font=dict(size=font_size + 2))
+
+    fig.update_xaxes(tickfont=dict(size=font_size))
+    fig.update_yaxes(tickfont=dict(size=font_size), title_font=dict(size=font_size + 2), secondary_y=False)
+    fig.update_yaxes(tickfont=dict(size=font_size), title_font=dict(size=font_size + 2), secondary_y=True)
+
+    fig.update_layout(legend_font=dict(size=font_size), hoverlabel=dict(font=dict(size=font_size)))
+
+    # Подписи
+    fig.update_traces(textfont=dict(size=font_size))
+
+    fig.update_yaxes(title_text="Total Working Time (min)", secondary_y=False, range=[0, max_time + 50])
+    fig.update_yaxes(title_text="Number of Assigned Jobs", secondary_y=True)
+
+    if show:
+        fig.show()
+    else:
+        fig_json = plotly.io.to_json(fig)
+        return fig_json
+
 
 
 # TODO разряды рабочих и влияние на временной норматив операции. 
