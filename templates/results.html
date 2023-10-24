@@ -4,6 +4,7 @@
     <title>Results</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body class="container mt-4">
 
@@ -69,11 +70,24 @@
     
     <!-- Вставка графика schedule_plot.png -->
     <h2>Schedule Plot</h2>
-    <img src="/static/schedule_plot.png" alt="Schedule Plot">
+    <!-- <img src="/static/schedule_plot.png" alt="Schedule Plot"> -->
+    <div id="schedule-plotly-div"></div>
+
+        <script type="text/javascript">
+            var schedule_fig = {{ schedule_fig | safe }};
+            Plotly.newPlot('schedule-plotly-div', schedule_fig);
+        </script>
+
 
     <!-- Вставка графика utilization_plot.png -->
     <h2>Worker Utilization Plot</h2>
-    <img src="/static/utilization_plot.png" alt="Worker Utilization Plot">
+    <!-- <img src="/static/utilization_plot.png" alt="Worker Utilization Plot"> -->
+    <div id="utilization-plotly-div"></div>
+
+        <script type="text/javascript">
+            var worker_util_fig = {{ worker_util_fig | safe }};
+            Plotly.newPlot('utilization-plotly-div', worker_util_fig);
+        </script>
 
     <a href="{{ url_for('index') }}" class="btn btn-primary mt-4">Back to Model Builder</a>
 </body>
