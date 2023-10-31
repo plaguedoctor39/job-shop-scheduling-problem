@@ -18,6 +18,7 @@ import plotly.figure_factory as ff
 import plotly.express as px
 import pandas as pd
 from plotly.subplots import make_subplots
+from datagen import workers_data, jobs_data, project_data
 
 random.seed(12345)
 
@@ -86,12 +87,13 @@ random.seed(12345)
 #     6: ([265, 275, 285, 295, 305], 6 * 60)
 # }
 
-# with open('data.json', 'w', encoding='utf-8') as file:
-#     json.dump({
-#         'workers_data': workers_data,
-#         'jobs_data': jobs_data,
-#         'project_data': project_data
-#     }, file, ensure_ascii=False, indent=4)
+
+with open('data.json', 'w', encoding='utf-8') as file:
+    json.dump({
+        'workers_data': workers_data,
+        'jobs_data': jobs_data,
+        'project_data': project_data
+    }, file, ensure_ascii=False, indent=4)
 
 with open('data.json', 'r', encoding='utf-8') as file:
     data = json.load(file)
@@ -402,8 +404,8 @@ def solve_model(model, custom_data = False):
             model.worker_assigned[key].set_value(value)
             model.worker_assigned[key].fix()
     start_time = time.time()
-    solver = SolverFactory('appsi_highs')
-    # solver.options['threads'] = 6
+    solver = SolverFactory('scip')
+    # solver.options['threads'] = 1024
     # solver.options['set/lp/initalgorithm'] = 'd'
     # solver.options['warmstart'] = True
     result = solver.solve(model, tee=True)
@@ -415,7 +417,7 @@ def solve_model(model, custom_data = False):
 
 
 
-    if (result.solver.status == SolverStatus.ok) and (result.solver.termination_condition == TerminationCondition.optimal):
+    if ((result.solver.status == SolverStatus.ok) and (result.solver.termination_condition == TerminationCondition.optimal)) or (result.solver.termination_condition == TerminationCondition.feasible):
         # Print the solution
         print("\nWorker Assignments with Order:")
         for k in model.workers:
