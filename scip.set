@@ -310,7 +310,7 @@ limits/memory = 8796093022207
 
 # solving stops, if the relative gap = |primal - dual|/MIN(|dual|,|primal|) is below the given value, the gap is 'Infinity', if primal and dual bound have opposite signs
 # [type: real, advanced: FALSE, range: [0,1.79769313486232e+308], default: 0]
-limits/gap = 0
+limits/gap = 0.01
 
 # solving stops, if the absolute gap = |primalbound - dualbound| is below the given value
 # [type: real, advanced: FALSE, range: [0,1.79769313486232e+308], default: 0]
@@ -358,7 +358,7 @@ lp/solvedepth = -1
 
 # LP algorithm for solving initial LP relaxations (automatic 's'implex, 'p'rimal simplex, 'd'ual simplex, 'b'arrier, barrier with 'c'rossover)
 # [type: char, advanced: FALSE, range: {spdbc}, default: s]
-lp/initalgorithm = b
+lp/initalgorithm = s
 
 # LP algorithm for resolving LP relaxations if a starting basis exists (automatic 's'implex, 'p'rimal simplex, 'd'ual simplex, 'b'arrier, barrier with 'c'rossover)
 # [type: char, advanced: FALSE, range: {spdbc}, default: s]
@@ -470,7 +470,7 @@ lp/rowrepswitch = 1.2
 
 # number of threads used for solving the LP (0: automatic)
 # [type: int, advanced: TRUE, range: [0,64], default: 0]
-lp/threads = 8
+lp/threads = 64
 
 # factor of average LP iterations that is used as LP iteration limit for LP resolve (-1: unlimited)
 # [type: real, advanced: TRUE, range: [-1,1.79769313486232e+308], default: -1]
@@ -974,11 +974,11 @@ parallel/mode = 1
 
 # the minimum number of threads used during parallel solve
 # [type: int, advanced: FALSE, range: [0,64], default: 1]
-parallel/minnthreads = 1
+parallel/minnthreads = 32
 
 # the maximum number of threads used during parallel solve
 # [type: int, advanced: FALSE, range: [0,64], default: 8]
-parallel/maxnthreads = 8
+parallel/maxnthreads = 64
 
 # set different random seeds in each concurrent solver?
 # [type: bool, advanced: FALSE, range: {TRUE,FALSE}, default: TRUE]
@@ -3358,7 +3358,7 @@ presolving/milp/timing = 8
 
 # maximum number of threads presolving may use (0: automatic)
 # [type: int, advanced: FALSE, range: [0,2147483647], default: 1]
-presolving/milp/threads = 1
+presolving/milp/threads = 0
 
 # maximal possible fillin for substitutions to be considered
 # [type: int, advanced: FALSE, range: [-2147483648,2147483647], default: 3]
@@ -10554,7 +10554,7 @@ benders/default/cutstrengthenintpoint = r
 
 # the number of threads to use when solving the subproblems
 # [type: int, advanced: TRUE, range: [1,2147483647], default: 1]
-benders/default/numthreads = 1
+benders/default/numthreads = 16
 
 # should a feasibility phase be executed during the root node, i.e. adding slack variables to constraints to ensure feasibility
 # [type: bool, advanced: FALSE, range: {TRUE,FALSE}, default: FALSE]
