@@ -246,7 +246,7 @@ constraints/disableenfops = FALSE
 
 # verbosity level of output
 # [type: int, advanced: FALSE, range: [0,5], default: 4]
-display/verblevel = 4
+display/verblevel = 5
 
 # maximal number of characters in a node information line
 # [type: int, advanced: FALSE, range: [0,2147483647], default: 143]
@@ -310,7 +310,7 @@ limits/memory = 8796093022207
 
 # solving stops, if the relative gap = |primal - dual|/MIN(|dual|,|primal|) is below the given value, the gap is 'Infinity', if primal and dual bound have opposite signs
 # [type: real, advanced: FALSE, range: [0,1.79769313486232e+308], default: 0]
-limits/gap = 0.01
+limits/gap = 0
 
 # solving stops, if the absolute gap = |primalbound - dualbound| is below the given value
 # [type: real, advanced: FALSE, range: [0,1.79769313486232e+308], default: 0]
@@ -8330,7 +8330,7 @@ propagating/nlobbt/nlptimelimit = 0
 
 # verbosity level of NLP solver
 # [type: int, advanced: TRUE, range: [0,5], default: 0]
-propagating/nlobbt/nlpverblevel = 0
+propagating/nlobbt/nlpverblevel = 5
 
 # LP iteration limit for nlobbt will be this factor times total LP iterations in root node
 # [type: real, advanced: TRUE, range: [0,1.79769313486232e+308], default: 2]
@@ -10902,5 +10902,5 @@ nlpi/ipopt/hessian_approximation = ""
 
 # Output verbosity level. -1 to use NLPI or Ipopt default.
 # [type: int, advanced: FALSE, range: [-1,12], default: -1]
-nlpi/ipopt/print_level = -1
+nlpi/ipopt/print_level = 12
 
