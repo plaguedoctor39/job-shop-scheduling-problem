@@ -5,6 +5,7 @@ import matplotlib.patches as patches
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from pyomo.opt import ProblemFormat
+import logging
 import random
 import numpy as np
 import time
@@ -19,73 +20,76 @@ import plotly.express as px
 import pandas as pd
 from plotly.subplots import make_subplots
 from datagen import workers_data, jobs_data, project_data
+from pyomo.util.infeasible import log_infeasible_constraints
 
 random.seed(12345)
 
-# workers_data = {
-#     1: ("Токарно-винторезная", "Токарь", 1, 50, None),
-#     2: ("Слесарная", "Слесарь", 1, 50, None),
-#     3: ("Вертикально-сверлильная", "Сверловщик", 1, 50, None),
-#     4: ("Токарная с ЧПУ", "Токарь с ЧПУ", 1, 50, None),
-#     5: ("Токарно-винторезная", "Токарь", 2, 55, None),
-#     6: ("Слесарная", "Слесарь", 2, 55, None),
-#     7: ("Вертикально-сверлильная", "Сверловщик", 2, 55, None),
-#     8: ("Токарная с ЧПУ", "Токарь с ЧПУ", 2, 55, None),
-#     9: ("Токарно-винторезная", "Токарь", 3, 60, None),
-#     10: ("Слесарная", "Слесарь", 3, 60, (9 * 60, 9.40 * 60)),
-#     11: ("Вертикально-сверлильная", "Сверловщик", 3, 60, None),
-#     12: ("Токарная с ЧПУ", "Токарь с ЧПУ", 3, 60, None),
-#     13: ("Токарно-винторезная", "Токарь", 4, 65, None),
-#     14: ("Слесарная", "Слесарь", 4, 65, None),
-#     15: ("Вертикально-сверлильная", "Сверловщик", 4, 65, None),
-#     16: ("Токарная с ЧПУ", "Токарь с ЧПУ", 4, 65, None),
-#     17: ("Токарно-винторезная", "Токарь", 5, 70, None),
-#     18: ("Слесарная", "Слесарь", 5, 70, None),
-#     19: ("Вертикально-сверлильная", "Сверловщик", 5, 70, None),
-#     20: ("Токарная с ЧПУ", "Токарь с ЧПУ", 5, 70, None),
-# }
+logging.getLogger('pyomo.util.infeasible').setLevel(logging.INFO)
 
-# jobs_data = {
-#     15: ("Токарно-винторезная", 5, [], 1),
-#     25: ("Токарная с ЧПУ", 15, [15], 1),
-#     35: ("Токарная с ЧПУ", 20, [25], 2),
-#     45: ("Вертикально-сверлильная", 10, [35], 1),
-#     55: ("Слесарная", 50, [45], 3),
-#     65: ("Токарно-винторезная", 15, [], 2),
-#     75: ("Токарная с ЧПУ", 20, [65], 2),
-#     85: ("Токарная с ЧПУ", 25, [75], 3),
-#     95: ("Вертикально-сверлильная", 15, [85], 1),
-#     105: ("Слесарная", 55, [95], 3),
-#     115: ("Токарно-винторезная", 20, [], 2),
-#     125: ("Токарная с ЧПУ", 25, [115], 3),
-#     135: ("Токарная с ЧПУ", 30, [125], 4),
-#     145: ("Вертикально-сверлильная", 20, [135], 2),
-#     155: ("Слесарная", 60, [145], 4),
-#     165: ("Токарно-винторезная", 25, [], 3),
-#     175: ("Токарная с ЧПУ", 30, [165], 4),
-#     185: ("Токарная с ЧПУ", 35, [175], 5),
-#     195: ("Вертикально-сверлильная", 25, [185], 3),
-#     205: ("Слесарная", 65, [195], 5),
-#     215: ("Токарно-винторезная", 30, [], 4),
-#     225: ("Токарная с ЧПУ", 35, [215], 5),
-#     235: ("Токарная с ЧПУ", 40, [225], 1),
-#     245: ("Вертикально-сверлильная", 30, [235], 4),
-#     255: ("Слесарная", 70, [245], 2),
-#     265: ("Токарно-винторезная", 35, [], 5),
-#     275: ("Токарная с ЧПУ", 40, [265], 1),
-#     285: ("Токарная с ЧПУ", 45, [275], 2),
-#     295: ("Вертикально-сверлильная", 35, [285], 5),
-#     305: ("Слесарная", 75, [295], 1),
-# }
+workers_data = {
+    1: ("Токарно-винторезная", "Токарь", 1, 50, None),
+    2: ("Слесарная", "Слесарь", 1, 50, None),
+    3: ("Вертикально-сверлильная", "Сверловщик", 1, 50, None),
+    4: ("Токарная с ЧПУ", "Токарь с ЧПУ", 1, 50, None),
+    5: ("Токарно-винторезная", "Токарь", 2, 55, (60, 90)),
+    6: ("Слесарная", "Слесарь", 2, 55, None),
+    7: ("Вертикально-сверлильная", "Сверловщик", 2, 55, None),
+    8: ("Токарная с ЧПУ", "Токарь с ЧПУ", 2, 55, None),
+    9: ("Токарно-винторезная", "Токарь", 3, 60, None),
+    10: ("Слесарная", "Слесарь", 3, 60, (60, 90)),
+    11: ("Вертикально-сверлильная", "Сверловщик", 3, 60, None),
+    12: ("Токарная с ЧПУ", "Токарь с ЧПУ", 3, 60, None),
+    13: ("Токарно-винторезная", "Токарь", 4, 65, None),
+    14: ("Слесарная", "Слесарь", 4, 65, None),
+    15: ("Вертикально-сверлильная", "Сверловщик", 4, 65, None),
+    16: ("Токарная с ЧПУ", "Токарь с ЧПУ", 4, 65, (60, 90)),
+    17: ("Токарно-винторезная", "Токарь", 5, 70, None),
+    18: ("Слесарная", "Слесарь", 5, 70, None),
+    19: ("Вертикально-сверлильная", "Сверловщик", 5, 70, None),
+    20: ("Токарная с ЧПУ", "Токарь с ЧПУ", 5, 1000, None),
+}
 
-# project_data = {
-#     1: ([15, 25, 35, 45, 55], 2 * 60),
-#     2: ([65, 75, 85, 95, 105], 8 * 60),
-#     3: ([115, 125, 135, 145, 155], 3 * 60),
-#     4: ([165, 175, 185, 195, 205], 4 * 60),
-#     5: ([215, 225, 235, 245, 255], 5 * 60),
-#     6: ([265, 275, 285, 295, 305], 6 * 60)
-# }
+jobs_data = {
+    15: ("Токарно-винторезная", 5, [], 1),
+    25: ("Токарная с ЧПУ", 15, [15], 1),
+    35: ("Токарная с ЧПУ", 20, [25], 2),
+    45: ("Вертикально-сверлильная", 10, [35], 1),
+    55: ("Слесарная", 50, [45], 3),
+    65: ("Токарно-винторезная", 15, [], 2),
+    75: ("Токарная с ЧПУ", 20, [65], 2),
+    85: ("Токарная с ЧПУ", 25, [75], 3),
+    95: ("Вертикально-сверлильная", 15, [85], 1),
+    105: ("Слесарная", 55, [95], 3),
+    115: ("Токарно-винторезная", 20, [], 2),
+    125: ("Токарная с ЧПУ", 25, [115], 3),
+    135: ("Токарная с ЧПУ", 30, [125], 4),
+    145: ("Вертикально-сверлильная", 20, [135], 2),
+    155: ("Слесарная", 60, [145], 4),
+    165: ("Токарно-винторезная", 25, [], 3),
+    175: ("Токарная с ЧПУ", 30, [165], 4),
+    185: ("Токарная с ЧПУ", 35, [175], 5),
+    195: ("Вертикально-сверлильная", 25, [185], 3),
+    205: ("Слесарная", 65, [195], 5),
+    215: ("Токарно-винторезная", 30, [], 4),
+    225: ("Токарная с ЧПУ", 35, [215], 5),
+    235: ("Токарная с ЧПУ", 40, [225], 1),
+    245: ("Вертикально-сверлильная", 30, [235], 4),
+    255: ("Слесарная", 70, [245], 2),
+    265: ("Токарно-винторезная", 35, [], 5),
+    275: ("Токарная с ЧПУ", 40, [265], 1),
+    285: ("Токарная с ЧПУ", 45, [275], 2),
+    295: ("Вертикально-сверлильная", 35, [285], 5),
+    305: ("Слесарная", 75, [295], 1),
+}
+
+project_data = {
+    1: ([15, 25, 35, 45, 55], 120),
+    2: ([65, 75, 85, 95, 105], 480),
+    3: ([115, 125, 135, 145, 155], 3 * 60),
+    4: ([165, 175, 185, 195, 205], 4 * 60),
+    5: ([215, 225, 235, 245, 255], 5 * 60),
+    6: ([265, 275, 285, 295, 305], 6 * 60)
+}
 
 
 with open('data.json', 'w', encoding='utf-8') as file:
@@ -364,24 +368,30 @@ def build_model(weight_balance, weight_makespan, weight_costs=1, weight_workers=
             return model.end_time[last_task] <= project_data[p][1] + model.project_delay[p]
     model.project_delay_constr = Constraint(model.projects, rule=project_delay_rule)
 
-    def before_unavailability_rule(model, j, k):
-        if model.worker_unavailability[k]:
-            start_unavail, end_unavail = model.worker_unavailability[k]
-            print()
-            # Если рабочий назначен на задание, то задание должно завершиться до начала периода недоступности
-            return model.start_time[j] + model.job_duration[j] * model.worker_assigned[j, k] <= start_unavail
-        else:
-            return Constraint.Skip
+    # def before_unavailability_rule(model, j, k):
+    #     # Если у рабочего есть период недоступности
+    #     if model.worker_unavailability[k]:
+    #         start_unavail, end_unavail = model.worker_unavailability[k]
+    #         # Задание должно завершиться до начала периода недоступности
+    #         # или рабочий не должен быть назначен на задание.
+    #         return model.start_time[j] + model.job_duration[j] * model.worker_assigned[j, k] <= start_unavail
+    #     else:
+    #         # Если рабочий всегда доступен, мы игнорируем ограничение
+    #         return Constraint.Skip
 
-    def after_unavailability_rule(model, j, k):
-        if model.worker_unavailability[k]:
-            start_unavail, end_unavail = model.worker_unavailability[k]
-            # Если рабочий назначен на задание, то задание должно начаться после периода недоступности
-            return model.start_time[j] - end_unavail * model.worker_assigned[j, k] >= 0
-        else:
-            return Constraint.Skip
-    model.before_unavailability_constraints = Constraint(model.jobs, model.workers, rule=before_unavailability_rule)
-    model.after_unavailability_constraints = Constraint(model.jobs, model.workers, rule=after_unavailability_rule)
+    # def after_unavailability_rule(model, j, k):
+    #     # Если у рабочего есть период недоступности
+    #     if model.worker_unavailability[k]:
+    #         start_unavail, end_unavail = model.worker_unavailability[k]
+    #         # Задание должно начаться после окончания периода недоступности
+    #         # или рабочий не должен быть назначен на задание.
+    #         return model.start_time[j] >= end_unavail * model.worker_assigned[j, k] + (1 - model.worker_assigned[j, k]) * model.start_time[j].lb
+    #     else:
+    #         # Если рабочий всегда доступен, мы игнорируем ограничение
+    #         return Constraint.Skip
+
+    # model.before_unavailability_constraints = Constraint(model.jobs, model.workers, rule=before_unavailability_rule)
+    # model.after_unavailability_constraints = Constraint(model.jobs, model.workers, rule=after_unavailability_rule)
 
 
 
@@ -392,6 +402,27 @@ def build_model(weight_balance, weight_makespan, weight_costs=1, weight_workers=
     print(f"Build execution time: {elapsed_time:.2f} seconds")
     
     return model
+
+def remove_conflicting_assignments(model):
+    changes = False
+    for worker in model.workers:
+        if model.worker_unavailability[worker]:
+            start_unavail, end_unavail = model.worker_unavailability[worker]
+            for job in model.jobs:
+                    if model.worker_assigned[job, worker].value == 1:  # Если задача назначена рабочему
+                        start_time = model.start_time[job].value
+                        end_time = start_time + model.job_duration[job]
+                        print(f'Рабочему {worker} назначена задача {job} в период {start_time}-{end_time}, он недоступен в период с {start_unavail}-{end_unavail}')
+
+                        # Проверяем пересечение с периодом недоступности
+                        if start_time <= end_unavail and end_time >= start_unavail:
+                            # Если пересечение есть, добавляем задачу в список для переназначения
+                            # Снимаем задачу с рабочего
+                            model.worker_assigned[job, worker].set_value(0)
+                            model.worker_assigned[job, worker].fix()
+                            changes = True
+    
+    return model, changes
 
 def solve_model(model, custom_data = False):
     # Solve the model
@@ -414,7 +445,9 @@ def solve_model(model, custom_data = False):
     print("Solver Termination Condition:", result.solver.termination_condition)
     end_time = time.time()
     elapsed_time = end_time - start_time
-
+    if result.solver.status == SolverStatus.warning and result.solver.termination_condition == TerminationCondition.infeasible:
+        # Log infeasible constraints
+        log_infeasible_constraints(model)
 
 
     if ((result.solver.status == SolverStatus.ok) and (result.solver.termination_condition == TerminationCondition.optimal)) or (result.solver.termination_condition == TerminationCondition.feasible):
@@ -925,9 +958,9 @@ def plot_gantt_schedule(model, show=True, mode='workers'):
             if unavailability is not None:
                 task_data = dict(
                     Worker=f'Worker {k}: {workers_data[k][1]} (Разряд {model.worker_qualification[k]})',
-                    Task=f"Worker {k}: {jobs_data[j][0]} (Разряд {model.job_required_qualification[j]})",
-                    Start=time_to_datetime_str(base_time, unavailability[0] - 8*60),
-                    Finish=time_to_datetime_str(base_time, unavailability[1] - 8*60),
+                    Task=f"Worker {k}: is unavailable",
+                    Start=time_to_datetime_str(base_time, unavailability[0]),
+                    Finish=time_to_datetime_str(base_time, unavailability[1]),
                     Resource=f"Worker unavailability",
                     Color="grey"
                 )
