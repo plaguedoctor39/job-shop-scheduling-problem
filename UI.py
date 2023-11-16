@@ -7,14 +7,12 @@ report_timing()
 print('Building model')
 print('--------------')
 model11 = build_model(1,1,1,1,hard_deadline=False)
+model11.write(filename='model.mps', format=ProblemFormat.mps)
 # model11 = load_model_from_file()
 timer.toc('Built model')
 # model11.worker_assigned[55,10].set_value(0)
 # model11.worker_assigned[55,10].fix()  
 solve_model(model11)
-model11, changes = remove_conflicting_assignments(model11)
-if changes:
-    solve_model(model11)
 # Для добавления пользовательского решения (доделать)
 # saved_solution = {}
 # for v in model11.component_objects(Var):
@@ -37,7 +35,9 @@ timer.toc('Solved')
 #         print(f'{[model11.WorkDuringTime[j, worker, time].value for j in model11.jobs]}')
 
 
-plot_gantt_schedule(model11, mode='workers')
+plot_gantt_schedule(model11)
+plot_gantt_schedule_projects(model11)
+
 # save_model_to_file(model11)
 # plot_schedule(model11, show=True, mode='workers')
 # solution_to_file(model11)
