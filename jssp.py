@@ -26,70 +26,70 @@ random.seed(12345)
 
 logging.getLogger('pyomo.util.infeasible').setLevel(logging.INFO)
 
-workers_data = {
-    1: ("Токарно-винторезная", "Токарь", 1, 50, None),
-    2: ("Слесарная", "Слесарь", 1, 50, None),
-    3: ("Вертикально-сверлильная", "Сверловщик", 1, 50, None),
-    4: ("Токарная с ЧПУ", "Токарь с ЧПУ", 1, 50, None),
-    5: ("Токарно-винторезная", "Токарь", 2, 55, (60, 90)),
-    6: ("Слесарная", "Слесарь", 2, 55, None),
-    7: ("Вертикально-сверлильная", "Сверловщик", 2, 55, None),
-    8: ("Токарная с ЧПУ", "Токарь с ЧПУ", 2, 55, None),
-    9: ("Токарно-винторезная", "Токарь", 3, 60, None),
-    10: ("Слесарная", "Слесарь", 3, 60, (60, 90)),
-    11: ("Вертикально-сверлильная", "Сверловщик", 3, 60, None),
-    12: ("Токарная с ЧПУ", "Токарь с ЧПУ", 3, 60, None),
-    13: ("Токарно-винторезная", "Токарь", 4, 65, None),
-    14: ("Слесарная", "Слесарь", 4, 65, None),
-    15: ("Вертикально-сверлильная", "Сверловщик", 4, 65, None),
-    16: ("Токарная с ЧПУ", "Токарь с ЧПУ", 4, 65, (60, 90)),
-    17: ("Токарно-винторезная", "Токарь", 5, 70, None),
-    18: ("Слесарная", "Слесарь", 5, 70, None),
-    19: ("Вертикально-сверлильная", "Сверловщик", 5, 70, None),
-    20: ("Токарная с ЧПУ", "Токарь с ЧПУ", 5, 1000, None),
-}
+# workers_data = {
+#     # 1: ("Токарно-винторезная", "Токарь", 1, 50, None),
+#     # 2: ("Слесарная", "Слесарь", 1, 50, None),
+#     # 3: ("Вертикально-сверлильная", "Сверловщик", 1, 50, None),
+#     # 4: ("Токарная с ЧПУ", "Токарь с ЧПУ", 1, 50, None),
+#     # 5: ("Токарно-винторезная", "Токарь", 2, 55, None),
+#     # 6: ("Слесарная", "Слесарь", 2, 55, None),
+#     # 7: ("Вертикально-сверлильная", "Сверловщик", 2, 55, None),
+#     # 8: ("Токарная с ЧПУ", "Токарь с ЧПУ", 2, 55, None),
+#     9: ("Токарно-винторезная", "Токарь", 3, 60, (0,60)),
+#     10: ("Слесарная", "Слесарь", 3, 60, None),
+#     11: ("Вертикально-сверлильная", "Сверловщик", 3, 60, None),
+#     12: ("Токарная с ЧПУ", "Токарь с ЧПУ", 3, 60, None),
+#     13: ("Токарно-винторезная", "Токарь", 4, 65, None),
+#     14: ("Слесарная", "Слесарь", 4, 65, None),
+#     15: ("Вертикально-сверлильная", "Сверловщик", 4, 65, None),
+#     16: ("Токарная с ЧПУ", "Токарь с ЧПУ", 4, 65, None),
+#     17: ("Токарно-винторезная", "Токарь", 5, 70, None),
+#     18: ("Слесарная", "Слесарь", 5, 70, None),
+#     19: ("Вертикально-сверлильная", "Сверловщик", 5, 70, None),
+#     20: ("Токарная с ЧПУ", "Токарь с ЧПУ", 5, 1000, None),
+# }
 
-jobs_data = {
-    15: ("Токарно-винторезная", 5, [], 1),
-    25: ("Токарная с ЧПУ", 15, [15], 1),
-    35: ("Токарная с ЧПУ", 20, [25], 2),
-    45: ("Вертикально-сверлильная", 10, [35], 1),
-    55: ("Слесарная", 50, [45], 3),
-    65: ("Токарно-винторезная", 15, [], 2),
-    75: ("Токарная с ЧПУ", 20, [65], 2),
-    85: ("Токарная с ЧПУ", 25, [75], 3),
-    95: ("Вертикально-сверлильная", 15, [85], 1),
-    105: ("Слесарная", 55, [95], 3),
-    115: ("Токарно-винторезная", 20, [], 2),
-    125: ("Токарная с ЧПУ", 25, [115], 3),
-    135: ("Токарная с ЧПУ", 30, [125], 4),
-    145: ("Вертикально-сверлильная", 20, [135], 2),
-    155: ("Слесарная", 60, [145], 4),
-    165: ("Токарно-винторезная", 25, [], 3),
-    175: ("Токарная с ЧПУ", 30, [165], 4),
-    185: ("Токарная с ЧПУ", 35, [175], 5),
-    195: ("Вертикально-сверлильная", 25, [185], 3),
-    205: ("Слесарная", 65, [195], 5),
-    215: ("Токарно-винторезная", 30, [], 4),
-    225: ("Токарная с ЧПУ", 35, [215], 5),
-    235: ("Токарная с ЧПУ", 40, [225], 1),
-    245: ("Вертикально-сверлильная", 30, [235], 4),
-    255: ("Слесарная", 70, [245], 2),
-    265: ("Токарно-винторезная", 35, [], 5),
-    275: ("Токарная с ЧПУ", 40, [265], 1),
-    285: ("Токарная с ЧПУ", 45, [275], 2),
-    295: ("Вертикально-сверлильная", 35, [285], 5),
-    305: ("Слесарная", 75, [295], 1),
-}
+# jobs_data = {
+#     15: ("Токарно-винторезная", 5, [], 1),
+#     25: ("Токарная с ЧПУ", 15, [15], 1),
+#     35: ("Токарная с ЧПУ", 20, [25], 2),
+#     45: ("Вертикально-сверлильная", 10, [35], 1),
+#     55: ("Слесарная", 50, [45], 3),
+#     65: ("Токарно-винторезная", 15, [], 2),
+#     75: ("Токарная с ЧПУ", 20, [65], 2),
+#     85: ("Токарная с ЧПУ", 25, [75], 3),
+#     95: ("Вертикально-сверлильная", 15, [85], 1),
+#     105: ("Слесарная", 55, [95], 3),
+#     115: ("Токарно-винторезная", 20, [], 2),
+#     125: ("Токарная с ЧПУ", 25, [115], 3),
+#     135: ("Токарная с ЧПУ", 30, [125], 4),
+#     145: ("Вертикально-сверлильная", 20, [135], 2),
+#     155: ("Слесарная", 60, [145], 4),
+#     165: ("Токарно-винторезная", 25, [], 3),
+#     175: ("Токарная с ЧПУ", 30, [165], 4),
+#     185: ("Токарная с ЧПУ", 35, [175], 5),
+#     195: ("Вертикально-сверлильная", 25, [185], 3),
+#     205: ("Слесарная", 65, [195], 5),
+#     215: ("Токарно-винторезная", 30, [], 4),
+#     225: ("Токарная с ЧПУ", 35, [215], 5),
+#     235: ("Токарная с ЧПУ", 40, [225], 1),
+#     245: ("Вертикально-сверлильная", 30, [235], 4),
+#     255: ("Слесарная", 70, [245], 2),
+#     265: ("Токарно-винторезная", 35, [], 5),
+#     275: ("Токарная с ЧПУ", 40, [265], 1),
+#     285: ("Токарная с ЧПУ", 45, [275], 2),
+#     295: ("Вертикально-сверлильная", 35, [285], 5),
+#     305: ("Слесарная", 75, [295], 2),
+# }
 
-project_data = {
-    1: ([15, 25, 35, 45, 55], 120),
-    2: ([65, 75, 85, 95, 105], 480),
-    3: ([115, 125, 135, 145, 155], 3 * 60),
-    4: ([165, 175, 185, 195, 205], 4 * 60),
-    5: ([215, 225, 235, 245, 255], 5 * 60),
-    6: ([265, 275, 285, 295, 305], 6 * 60)
-}
+# project_data = {
+#     1: ([15, 25, 35, 45, 55], 120, 'ring'),
+#     2: ([65, 75, 85, 95, 105], 480, 'ring2'),
+#     3: ([115, 125, 135, 145, 155], 3 * 60, 'ring3'),
+#     4: ([165, 175, 185, 195, 205], 4 * 60, 'ring4'),
+#     5: ([215, 225, 235, 245, 255], 5 * 60, 'ring5'),
+#     6: ([265, 275, 285, 295, 305], 6 * 60, 'ring6')
+# }
 
 
 with open('data.json', 'w', encoding='utf-8') as file:
@@ -106,86 +106,34 @@ workers_data = {int(k): v for k, v in data['workers_data'].items()}
 jobs_data = {int(k): v for k, v in data['jobs_data'].items()}
 project_data = {int(k): v for k, v in data['project_data'].items()}
 
+# Создание проекта недоступности
+is_unavailability_present = any(worker_info[4] is not None for worker_info in workers_data.values())
+unavailability_jobs = {}
+job_id = max(jobs_data.keys()) + 1  # Начинаем с ID, следующего за последним в jobs_data
 
-def gen_data():
-    # Создаем случайный набор работников
-    num_workers = 10
-    specializations = ["Токарно-винторезная", "Слесарная", "Вертикально-сверлильная", "Токарная с ЧПУ"]
-    grades = list(range(1, 5))
-    cost_rates = [5.0, 5.5, 6.0, 6.5]
+if is_unavailability_present:
+    project_data[0] = ([], 480, 'unavailability')
 
-    workers_data = {}
-    for i in range(1, num_workers + 1):
-        spec = random.choice(specializations)
-        grade = random.choice(grades)
-        rate = cost_rates[grade - 1]
-        workers_data[i] = (spec, grade, rate)
-
-    # Генерация проектов
-    num_projects = 10
-    max_tasks_per_project = 5
-    project_data = {}
-
-    jobs_data = {}
-    job_id = 1
-
-    workers_pool = list(workers_data.keys())
-
-    for p in range(1, num_projects + 1):
-        project_data[p] = []
-        num_tasks = random.randint(1, max_tasks_per_project)
-        for _ in range(num_tasks):
-            chosen_worker = random.choice(workers_pool)
-            workers_pool.remove(chosen_worker)
-            
-            spec, grade, _ = workers_data[chosen_worker]
-            duration = random.randint(5, 50)  # Продолжительность задачи в минутах
-            dependencies = [job_id - 1] if job_id - 1 in jobs_data else []
-            
-            jobs_data[job_id] = (spec, duration, dependencies, grade)
-            project_data[p].append(job_id)
-            
+    for worker_id, worker_info in workers_data.items():
+        unavailability = worker_info[4]
+        if unavailability:
+            unavailability_jobs[job_id] = (worker_info[0], unavailability[1] - unavailability[0], [], 1, worker_id)  # Разряд 1 для всех задач недоступности
+            project_data[0][0].append(job_id)  # Добавляем задачу в проект недоступности
             job_id += 1
-            
-            if not workers_pool:
-                workers_pool = list(workers_data.keys())
 
-    print("Generated workers_data:", workers_data)
-    print("\nGenerated jobs_data:", jobs_data)
-    print("\nGenerated project_data:", project_data)
-    return workers_data, jobs_data, project_data
+    # Объединяем jobs_data с задачами недоступности
+    jobs_data.update(unavailability_jobs)
 
-# workers_data, jobs_data, project_data = gen_data()
+print(project_data)
+# print(jobs_data)
 
-
-# # Счетчик для специализаций среди рабочих
-# worker_specializations_count = {spec: 0 for spec in specializations}
-# for specialization in workers_data.values():
-#     worker_specializations_count[specialization] += 1
-
-# # Счетчик для требуемых специализаций среди задач
-# job_specializations_count = {spec: 0 for spec in specializations}
-# for specialization, _, _ in jobs_data.values():
-#     job_specializations_count[specialization] += 1
-
-# print("Специализации рабочих:")
-# for spec, count in worker_specializations_count.items():
-#     print(f"{spec}: {count}")
-
-# print("\nТребуемые специализации для задач:")
-# for spec, count in job_specializations_count.items():
-#     print(f"{spec}: {count}")
-
-
-
-
-task_to_project = {j: p for p, (job_list, _) in project_data.items() for j in job_list}
+task_to_project = {j: p for p, (job_list, _, n) in project_data.items() for j in job_list}
 
 for j in jobs_data.keys():
     if j not in task_to_project:
         print(f"Job {j} is not assigned to any project!")
 
-def build_model(weight_balance, weight_makespan, weight_costs=1, weight_workers=1, hard_deadline=False):
+def build_model(weight_makespan, weight_costs=1, hard_deadline=False):
     start_time = time.time()
 
     model = ConcreteModel()
@@ -214,6 +162,10 @@ def build_model(weight_balance, weight_makespan, weight_costs=1, weight_workers=
     model.job_required_qualification = Param(model.jobs, initialize={k: v[3] for k, v in jobs_data.items()})
     model.cost_rate = Param(model.workers, initialize={k: v[3] for k, v in workers_data.items()})
     model.worker_unavailability = Param(model.workers, initialize={k: v[4] for k, v in workers_data.items()})
+    unavailability_task_flags = {job_id: 1 if job_id in unavailability_jobs else 0 for job_id in model.jobs}
+    model.is_unavailability_task = Param(model.jobs, within=Binary, initialize=unavailability_task_flags)
+
+    
 
     # Variables
     model.start_time = Var(model.jobs, domain=NonNegativeReals)
@@ -233,33 +185,28 @@ def build_model(weight_balance, weight_makespan, weight_costs=1, weight_workers=
 
 
     bigM = sum(model.job_duration.values())
-    # bigM = 1000
 
-    # Objective (You may need to specify the objective depending on your specific requirements)
-    # model.obj = Objective(expr=model.makespan, sense=minimize)
-    # model.obj = Objective(expr=weight_balance * (model.max_work_time - model.min_work_time) + 
-    #                   weight_makespan * sum(model.end_time[j] for j in model.jobs), sense=minimize)
-    
-    # model.obj = Objective(expr=weight_balance * (model.max_work_time - model.min_work_time) + 
-    #                   weight_makespan * sum(model.end_time[j] for j in model.jobs) + 
-    #                   sum(model.worker_deviation[k] * model.worker_deviation[k] for k in model.workers), 
-    #                   sense=minimize)
-    # model.obj = Objective(expr=weight_balance * (model.max_work_time - model.min_work_time) + 
-    #                   weight_makespan * sum(model.end_time[j] for j in model.jobs) + 
-    #                   sum(model.worker_deviation[k] * model.worker_deviation[k] for k in model.workers) +
-    #                   weight_costs * sum(model.worker_assigned[j, k] * model.job_duration[j] * model.cost_rate[k] for j in model.jobs for k in model.workers),
-    #                   sense=minimize)
     weight_delay = 1  # это весовой коэффициент, который можно настроить
 
+    # model.obj = Objective(
+    #     expr=weight_balance * (model.max_work_time - model.min_work_time) +
+    #         weight_makespan * sum(model.end_time[j] for j in model.jobs if not model.is_unavailability_task[j]) +
+    #         weight_costs * sum(model.worker_assigned[j, k] * model.job_duration[j] * model.cost_rate[k] 
+    #                         for j in model.jobs for k in model.workers if not model.is_unavailability_task[j]) +
+    #         weight_delay * sum(model.project_delay[p] for p in model.projects) - 
+    #         weight_workers * sum(model.worker_used[k] for k in model.workers),
+    #     sense=minimize
+    # )
+    weight_idle = 1
     model.obj = Objective(
-        expr=weight_balance * (model.max_work_time - model.min_work_time) +
-            weight_makespan * sum(model.end_time[j] for j in model.jobs) +
-            # sum(model.worker_deviation[k] * model.worker_deviation[k] for k in model.workers) +
-            weight_costs * sum(model.worker_assigned[j, k] * model.job_duration[j] * model.cost_rate[k] for j in model.jobs for k in model.workers) +
-            weight_delay * sum(model.project_delay[p] for p in model.projects) - 
-            weight_workers * sum(model.worker_used[k] for k in model.workers),
-        sense=minimize
+        expr=weight_makespan * model.makespan + # сделать время окончания последней операции
+            weight_costs * 0.002 * sum(model.worker_assigned[j, k] * model.job_duration[j] * model.cost_rate[k] 
+                            for j in model.jobs for k in model.workers if not model.is_unavailability_task[j]) +
+                            # sum(model.end_time[j] for j in model.jobs if not model.is_unavailability_task[j]) +
+                            weight_idle * sum(model.idle_time[k] for k in model.workers) +
+            weight_delay * sum(model.project_delay[p] for p in model.projects),sense=minimize
     )
+
 
 
 
@@ -277,9 +224,6 @@ def build_model(weight_balance, weight_makespan, weight_costs=1, weight_workers=
         return model.worker_assigned[i, k] <= model.worker_used[k]
 
     model.worker_usage_constraint = Constraint(model.jobs, model.workers, rule=worker_usage_rule)
-
-    # def qualification_rule(model, i, k):
-    #     return model.worker_qualification[k] >= model.job_required_qualification[i]
 
     def worker_assignment_rule(model, i, k):
         specialization_match = model.specialization[k] == model.job_required_specialization[i]
@@ -332,16 +276,11 @@ def build_model(weight_balance, weight_makespan, weight_costs=1, weight_workers=
 
     # устанавливает, что все задачи должны завершиться до общего времени завершения
     def makespan_rule(model, i):
-        return model.end_time[i] <= model.makespan
+        if not model.is_unavailability_task[i]:
+            return model.end_time[i] <= model.makespan
+        else:
+            return Constraint.Skip
     model.makespan_constraint = Constraint(model.jobs, rule=makespan_rule)
-
-    # # задача может быть назначена рабочему только если его специализация соответствует требованиям задачи
-    # def specialization_rule(model, i, k):
-    #     if model.specialization[k] == model.job_required_specialization[i]:
-    #         return model.worker_assigned[i, k] <= 1
-    #     else:
-    #         return model.worker_assigned[i, k] == 0
-    # model.specialization_constraint = Constraint(model.jobs, model.workers, rule=specialization_rule)
 
     # убеждается, что каждая задача назначена только одному рабочему
     def job_assignment_rule(model, i):
@@ -368,33 +307,6 @@ def build_model(weight_balance, weight_makespan, weight_costs=1, weight_workers=
             return model.end_time[last_task] <= project_data[p][1] + model.project_delay[p]
     model.project_delay_constr = Constraint(model.projects, rule=project_delay_rule)
 
-    # def before_unavailability_rule(model, j, k):
-    #     # Если у рабочего есть период недоступности
-    #     if model.worker_unavailability[k]:
-    #         start_unavail, end_unavail = model.worker_unavailability[k]
-    #         # Задание должно завершиться до начала периода недоступности
-    #         # или рабочий не должен быть назначен на задание.
-    #         return model.start_time[j] + model.job_duration[j] * model.worker_assigned[j, k] <= start_unavail
-    #     else:
-    #         # Если рабочий всегда доступен, мы игнорируем ограничение
-    #         return Constraint.Skip
-
-    # def after_unavailability_rule(model, j, k):
-    #     # Если у рабочего есть период недоступности
-    #     if model.worker_unavailability[k]:
-    #         start_unavail, end_unavail = model.worker_unavailability[k]
-    #         # Задание должно начаться после окончания периода недоступности
-    #         # или рабочий не должен быть назначен на задание.
-    #         return model.start_time[j] >= end_unavail * model.worker_assigned[j, k] + (1 - model.worker_assigned[j, k]) * model.start_time[j].lb
-    #     else:
-    #         # Если рабочий всегда доступен, мы игнорируем ограничение
-    #         return Constraint.Skip
-
-    # model.before_unavailability_constraints = Constraint(model.jobs, model.workers, rule=before_unavailability_rule)
-    # model.after_unavailability_constraints = Constraint(model.jobs, model.workers, rule=after_unavailability_rule)
-
-
-
     model.write(filename='model.mps', format=ProblemFormat.mps)
     # model.write("model.nl")
     end_time = time.time()
@@ -418,6 +330,7 @@ def remove_conflicting_assignments(model):
                         if start_time <= end_unavail and end_time >= start_unavail:
                             # Если пересечение есть, добавляем задачу в список для переназначения
                             # Снимаем задачу с рабочего
+                            print(f'Задача {job} снята с рабочего {worker}')
                             model.worker_assigned[job, worker].set_value(0)
                             model.worker_assigned[job, worker].fix()
                             changes = True
@@ -426,6 +339,25 @@ def remove_conflicting_assignments(model):
 
 def solve_model(model, custom_data = False):
     # Solve the model
+    # Фиксируем задачи недоступности за рабочими
+    for job_id, job_info in unavailability_jobs.items():
+        worker_id = job_info[4]  # Получаем ID рабочего из задачи недоступности
+
+        # Фиксируем время начала и окончания задачи недоступности
+        start_unavail, end_unavail = workers_data[worker_id][4]
+        model.start_time[job_id].set_value(start_unavail)
+        # model.end_time[job_id].set_value(end_unavail)
+        model.start_time[job_id].fix()
+        # model.end_time[job_id].fix()
+
+        # Назначаем задачу недоступности соответствующему рабочему
+        for k in model.workers:
+            if k == worker_id:
+                model.worker_assigned[job_id, k].set_value(1)
+                model.worker_assigned[job_id, k].fix()
+            else:
+                model.worker_assigned[job_id, k].set_value(0)
+                model.worker_assigned[job_id, k].fix()
     if custom_data:
         for idx, i in enumerate(start_times, start=1):
             model.start_time[idx].set_value(i)
@@ -454,7 +386,7 @@ def solve_model(model, custom_data = False):
         # Print the solution
         print("\nWorker Assignments with Order:")
         for k in model.workers:
-            assigned_jobs = [(j, model.start_time[j].value) for j in model.jobs if model.worker_assigned[j, k].value > 0.5]
+            assigned_jobs = [(j, model.start_time[j].value) for j in model.jobs if model.worker_assigned[j, k].value > 0.5 and not model.is_unavailability_task[j]]
             sorted_jobs = sorted(assigned_jobs, key=lambda x: x[1])  
             if sorted_jobs:
                 job_sequence = " -> ".join(str(job[0]) for job in sorted_jobs)
@@ -479,21 +411,23 @@ def solve_model(model, custom_data = False):
 
         print("\nProject Deadlines and End Times:")
         for p, job_list_and_deadline in project_data.items():
-            job_list = job_list_and_deadline[0]
-            deadline = job_list_and_deadline[1]
-            project_end_time = max(model.end_time[j].value for j in job_list)
+            if p != 0:  # Пропускаем проект недоступности
+                job_list = job_list_and_deadline[0]
+                deadline = job_list_and_deadline[1]
+                name = job_list_and_deadline[2]
+                project_end_time = max(model.end_time[j].value for j in job_list if not model.is_unavailability_task[j])
 
-            formatted_deadline = convert_to_datetime(deadline).strftime('%H:%M')
-            formatted_end_time = convert_to_datetime(project_end_time).strftime('%H:%M')
-            
-            print(f"Project {p} ends at: {formatted_end_time}. Deadline: {formatted_deadline}.")
+                formatted_deadline = convert_to_datetime(deadline).strftime('%H:%M')
+                formatted_end_time = convert_to_datetime(project_end_time).strftime('%H:%M')
+                
+                print(f"Project name {name} id {p} ends at: {formatted_end_time}. Deadline: {formatted_deadline}.")
 
         total_expense = 0  # Переменная для подсчета общих затрат
 
         print("\nWorker Performance and Costs:")
         for k in model.workers:
-            assigned_jobs_count = sum(model.worker_assigned[j, k].value for j in model.jobs)
-            total_minutes = sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs)
+            assigned_jobs_count = sum(model.worker_assigned[j, k].value for j in model.jobs if not model.is_unavailability_task[j])
+            total_minutes = sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs if not model.is_unavailability_task[j])
             hours = total_minutes // 60
             minutes = total_minutes % 60
             worker_cost = total_minutes * model.cost_rate[k]  # Рассчитываем затраты для рабочего
@@ -507,8 +441,7 @@ def solve_model(model, custom_data = False):
                     print(f"Рабочий {k}, Специализация: {workers_data[k][0]}, Задача: {j}, Требуемый разряд: {jobs_data[j][3]}, Разряд рабочего: {workers_data[k][1]}")
 
         # Список времени работы для каждого рабочего
-        worker_times = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
-
+        worker_times = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs if not model.is_unavailability_task[j]) for k in model.workers]
         # Вычисляем среднее время работы
         average_work_time = sum(worker_times) / len(model.workers)
 
@@ -532,6 +465,13 @@ def solve_model(model, custom_data = False):
         objective_value = model.obj.expr()
         print(f"Value of the objective function: {objective_value}")
 
+        print(f'weight balance - {model.max_work_time.value - model.min_work_time.value}')
+        print(f'end time {sum(model.end_time[j].value for j in model.jobs if not model.is_unavailability_task[j]) * 0.1}')
+        print(f'cost rate {sum(model.worker_assigned[j, k].value * model.job_duration[j] * model.cost_rate[k] for j in model.jobs for k in model.workers if not model.is_unavailability_task[j]) * 0.002}')
+        print(f'makespan {model.makespan.value}')
+        print(f'delay {sum(model.project_delay[p].value for p in model.projects)}') 
+        print(f'workers used {sum(model.worker_used[k].value for k in model.workers) * 15}')
+
         # If you wish to see the complete status and log of the solver
         # print(solver.solve(model, tee=True))
     else:
@@ -549,14 +489,16 @@ def generate_output(model):
     # Project Deadlines and End Times
     project_end_times = []
     for p, job_list_and_deadline in project_data.items():
-        job_list = job_list_and_deadline[0]
-        deadline = job_list_and_deadline[1]
-        project_end_time = max(model.end_time[j].value for j in job_list)
+        if p != 0:  # Пропускаем проект недоступности
+            job_list = job_list_and_deadline[0]
+            deadline = job_list_and_deadline[1]
+            name = job_list_and_deadline[2]
+            project_end_time = max(model.end_time[j].value for j in job_list if not model.is_unavailability_task[j])
 
-        formatted_deadline = convert_to_datetime(deadline).strftime('%H:%M')
-        formatted_end_time = convert_to_datetime(project_end_time).strftime('%H:%M')
-        
-        project_end_times.append({'project': p, 'end_time': formatted_end_time, 'deadline': formatted_deadline})
+            formatted_deadline = convert_to_datetime(deadline).strftime('%H:%M')
+            formatted_end_time = convert_to_datetime(project_end_time).strftime('%H:%M')
+            
+            project_end_times.append({'project': p, 'end_time': formatted_end_time, 'deadline': formatted_deadline, 'name': name})
 
     output_data['projects'] = project_end_times
 
@@ -564,8 +506,8 @@ def generate_output(model):
     worker_details = []
     total_expense = 0
     for k in model.workers:
-        assigned_jobs_count = sum(model.worker_assigned[j, k].value for j in model.jobs)
-        total_minutes = sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs)
+        assigned_jobs_count = sum(model.worker_assigned[j, k].value for j in model.jobs if not model.is_unavailability_task[j])
+        total_minutes = sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs if not model.is_unavailability_task[j])
         hours = total_minutes // 60
         minutes = total_minutes % 60
         worker_cost = total_minutes * model.cost_rate[k]
@@ -582,14 +524,14 @@ def generate_output(model):
     output_data['workers'] = worker_details
 
     # Additional Info
-    worker_times = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
+    worker_times = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs if not model.is_unavailability_task[j]) for k in model.workers]
     average_work_time = sum(worker_times) / len(model.workers)
     variance = sum((time - average_work_time) ** 2 for time in worker_times) / len(model.workers)
     std_deviation = variance ** 0.5
     std_hours = int(std_deviation // 60)
     std_minutes = int(std_deviation % 60)
 
-    final_end_time = max(model.end_time[j].value for j in model.jobs)
+    final_end_time = max(model.end_time[j].value for j in model.jobs if not model.is_unavailability_task[j])
     final_time = start_time + timedelta(minutes=final_end_time)
     objective_value = model.obj.expr()
 
@@ -607,217 +549,6 @@ def time_label(t):
     """Convert time in minutes since 8am to a HH:MM format."""
     h, m = divmod(t + 8*60, 60)  # Add 8 hours (since the day starts at 8am)
     return f"{int(h) % 24:02}:{int(m):02}"  # % 24 is used to wrap around hours greater than 24
-
-
-def plot_schedule(model, show=True, mode='workers'):
-
-    offset = 8 * 60  # 8 hours in minutes
-
-
-    if not show:
-        # Если мы сохраняем график как изображение (веб-версия)
-        plt.switch_backend('agg')
-
-    fig, ax = plt.subplots(figsize=(16, 8))
-    colors = plt.cm.Paired(np.linspace(0, 1, len(project_data)))
-    assigned_workers = set()
-
-    if mode == 'workers':
-        # График по рабочим
-        for idx, k in enumerate(model.workers):
-            
-            # Визуализация недоступности рабочего
-            unavailability = model.worker_unavailability[k]
-            if unavailability is not None:
-                adjusted_start = unavailability[0] - offset
-                adjusted_end = unavailability[1] - offset
-                duration = adjusted_end - adjusted_start
-                ax.broken_barh([(adjusted_start, duration)], (idx, 1), facecolors='grey', alpha=0.5)
-
-                mid_point = (adjusted_start + adjusted_end) / 2
-                time_str = f"{time_label(adjusted_start)} - {time_label(adjusted_end)}"
-                ax.text(mid_point, idx + 0.5, time_str, ha='center', va='center', color='black', fontsize=10)
-
-            for j in model.jobs:
-                if model.worker_assigned[j, k].value > 0.5:
-                    start = model.start_time[j].value
-                    duration = model.job_duration[j]
-                    project_id = model.task_to_project[j]
-                    ax.broken_barh([(start, duration)], (idx, 1), facecolors=(colors[project_id % len(colors)]))
-                    ax.text(start + 0.5*duration, idx + 0.5, f"{jobs_data[j][0]} ({duration}m, Разряд {model.job_required_qualification[j]})", ha='center', va='center', color='black')
-        
-        ax.set_yticks(range(len(model.workers)))
-        ax.set_yticklabels([f"ID {k}: {workers_data[k][1]}, Разряд {model.worker_qualification[k]}" for k in model.workers])
-
-    
-    elif mode == 'projects':
-        # График по проектам
-        worker_colors = plt.cm.Paired(np.linspace(0, 1, len(model.workers)))
-        for idx, p in enumerate(project_data.keys()):
-            for j in [j for j, proj in task_to_project.items() if proj == p]:
-                for k in model.workers:
-                    if model.worker_assigned[j, k].value > 0.5:
-                        start = model.start_time[j].value
-                        duration = jobs_data[j][1]
-                        worker_list = list(model.workers)
-                        ax.broken_barh([(start, duration)], (idx, 1), facecolors=(worker_colors[worker_list.index(k) % len(worker_colors)]))
-                        assigned_workers.add(k) 
-                        # ax.text(start + 0.5*duration, idx + 0.5, f"{jobs_data[j][0]} ({duration}m), Worker {k}", ha='center', va='center', color='black')
-
-        ax.set_yticks(range(len(project_data)))
-        ax.set_yticklabels([f"Project {p}" for p in project_data.keys()])
-
-
-    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
-    ax.set_xlabel('Time')
-    max_time_value = max(model.end_time[j].value for j in model.jobs)
-    ax.set_xticks(range(0, int(max_time_value) + 10, 5))
-    ax.set_title('Schedule')
-
-    unavailability_patch = Patch(facecolor='grey', alpha=0.5, label='Worker Unavailability')
-
-    if mode == 'projects':
-        legend_elements = [unavailability_patch] + [Patch(facecolor=worker_colors[i % len(worker_colors)], label=f"{workers_data[w][1]} (ID: {w})") for i, w in enumerate(model.workers) if w in assigned_workers]
-    else:
-        legend_elements = [unavailability_patch] + [Patch(facecolor=colors[i % len(colors)], edgecolor='gray', label=f'Project {i}') for i in project_data.keys()]
-
-    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1))
-
-
-    if show:
-        plt.show()
-    else:
-        fig.savefig("static/schedule_plot.png", bbox_inches='tight')
-        plt.close()
-
-
-
-
-
-
-
-def plot_combined_schedule(model1, model2, title1="First Model", title2="Second Model"):
-    project_colors_dark = {
-        1: "red",
-        2: "blue",
-        3: "green",
-    }
-    project_colors_light = {
-        1: "pink",
-        2: "lightblue",
-        3: "lightgreen",
-    }
-
-    fig, ax = plt.subplots(figsize=(12, len(model1.workers) * 3))
-
-    for idx, k in enumerate(model1.workers):
-        assigned_jobs1 = [(j, model1.start_time[j].value, model1.end_time[j].value) for j in model1.jobs if model1.worker_assigned[j, k].value > 0.5]
-        sorted_jobs1 = sorted(assigned_jobs1, key=lambda x: x[1])
-        for job in sorted_jobs1:
-            duration = job[2] - job[1]
-            ax.broken_barh([(job[1], duration)], (idx*3, 2), facecolors=project_colors_dark[model1.task_to_project[job[0]]])
-            ax.text(job[1] + duration / 2, idx * 3 + 1, f"J{job[0]} ({duration}h)", ha='center', va='center', fontsize=8, color='black')
-
-    for idx, k in enumerate(model2.workers):
-        assigned_jobs2 = [(j, model2.start_time[j].value, model2.end_time[j].value) for j in model2.jobs if model2.worker_assigned[j, k].value > 0.5]
-        sorted_jobs2 = sorted(assigned_jobs2, key=lambda x: x[1])
-        for job in sorted_jobs2:
-            duration = job[2] - job[1]
-            ax.broken_barh([(job[1], duration)], (idx*3, 2), facecolors=project_colors_light[model2.task_to_project[job[0]]], alpha=0.5)
-            ax.text(job[1] + duration / 2, idx * 3 + 1, f"J{job[0]} ({duration}h)", ha='center', va='center', fontsize=8, color='black')
-
-    ax.set_xlabel('Time')
-    ax.set_ylabel('Workers')
-    ax.set_yticks([idx*3 + 1 for idx in range(len(model1.workers))])
-    ax.set_yticklabels([f"Worker {k}" for k in model1.workers])
-    ax.grid(True)
-
-    legend_elements = [
-        Patch(facecolor='red', label='Project 1 - Model 1'),
-        Patch(facecolor='blue', label='Project 2 - Model 1'),
-        Patch(facecolor='green', label='Project 3 - Model 1'),
-        Patch(facecolor='pink', label='Project 1 - Model 2', alpha=0.5),
-        Patch(facecolor='lightblue', label='Project 2 - Model 2', alpha=0.5),
-        Patch(facecolor='lightgreen', label='Project 3 - Model 2', alpha=0.5)
-    ]
-
-    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1))
-    plt.tight_layout()
-    plt.show()
-
-
-def plot_worker_load(model):
-    worker_names = [f"Worker {k} ({workers_data[k]})" for k in model.workers]
-    tasks_counts = [sum(model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
-    total_times = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
-
-    # Convert total times from minutes to hours for plotting
-    total_hours = [t / 60 for t in total_times]
-
-    # Create subplots with 2 y-axes
-    fig, ax1 = plt.subplots(figsize=(16, 6))  # Увеличиваем размер фигуры
-    ax2 = ax1.twinx()
-
-    # Plot total hours on the first y-axis
-    ax1.bar(worker_names, total_hours, color='b', alpha=0.6, label='Total hours worked')
-    ax1.set_ylabel('Total hours worked', color='b')
-    ax1.tick_params(axis='y', labelcolor='b')
-    ax1.set_xticklabels(worker_names, rotation=45, ha='right')  # Поворачиваем метки x-оси
-
-    # Plot tasks counts on the second y-axis
-    ax2.plot(worker_names, tasks_counts, color='r', marker='o', label='Tasks assigned', linestyle='--')
-    ax2.set_ylabel('Tasks assigned', color='r')
-    ax2.tick_params(axis='y', labelcolor='r')
-
-    # Setting the title and showing the plot
-    ax1.set_title('Workers Load')
-    fig.tight_layout()
-    plt.show()
-
-
-
-def plot_worker_utilization(model, show=True):
-    if show:
-        pass
-    else:
-        # Если мы сохраняем график как изображение (веб-версия)
-        matplotlib.use('agg')
-    title = "Worker Utilization and Assigned Jobs"
-    worker_names = [f"Worker {k}" for k in model.workers]
-    total_minutes = [sum(model.job_duration[j] * model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
-    assigned_jobs_counts = [sum(model.worker_assigned[j, k].value for j in model.jobs) for k in model.workers]
-    max_time = 480
-    utilization_percentage = [(time_spent/max_time)*100 for time_spent in total_minutes]
-
-    fig, ax1 = plt.subplots(figsize=(12, 6))
-
-    bars = ax1.bar(worker_names, total_minutes, color='blue', label='Total Working Time (min)', alpha=0.6)
-    ax1.set_ylabel('Total Working Time (min)', color='blue', fontsize=14)
-    ax1.set_ylim(0, max_time + 50)
-    ax1.axhline(max_time, color="red", linestyle="--", label="Max Available Time")
-    ax1.set_xticklabels(worker_names, rotation=45, ha='right')
-
-    for idx, (util, bar) in enumerate(zip(utilization_percentage, bars)):
-        height = bar.get_height()
-        ax1.text(bar.get_x() + bar.get_width() / 2, height + 5, f"{util:.2f}%", ha='center', color='black', fontsize=9)
-    
-    ax2 = ax1.twinx()
-    ax2.plot(worker_names, assigned_jobs_counts, color='green', marker='o', label='Assigned Jobs Count', linestyle='--')
-    ax2.set_ylabel('Number of Assigned Jobs', color='green', fontsize=14)
-    for i, txt in enumerate(assigned_jobs_counts):
-        ax2.annotate(txt, (worker_names[i], assigned_jobs_counts[i] + 0.5), color='green', ha='center')
-
-    fig.tight_layout()
-    fig.legend(loc="upper left", bbox_to_anchor=(0.05, 1))
-    ax1.set_title(title, fontsize=16)
-    if show:
-        plt.show()
-    else:
-        plt.tight_layout()
-        fig.savefig("static/utilization_plot.png")
-        plt.close()
-
-
 
 def calculate_obj_value(weight_balance,weight_makespan, model):
     return weight_balance * (model.max_work_time.value - model.min_work_time.value) + weight_makespan * sum(model.end_time[j].value for j in model.jobs)
@@ -944,78 +675,76 @@ base_time = datetime(2023, 10, 1, 8, 0, 0)
 # Размер шрифтов
 font_size = 20
 
-def plot_gantt_schedule(model, show=True, mode='workers'):
+def plot_gantt_schedule(model, show=True, ):
     gantt_data = []
 
     project_colors = [convert_color(c) for c in plt.cm.Paired(np.linspace(0, 1, len(project_data)))]
-    
-    if mode == 'workers':
-        # График по рабочим
-        grouping_column = 'Worker'
-        fig_title = "Schedule by Workers"
-        for idx, k in enumerate(model.workers):
-            unavailability = model.worker_unavailability[k]
-            if unavailability is not None:
-                task_data = dict(
+     # График по рабочим
+    grouping_column = 'Worker'
+    fig_title = "Schedule by Workers"
+    for idx, k in enumerate(model.workers):
+        unavailability = model.worker_unavailability[k]
+        if unavailability is not None:
+            task_data = dict(
                     Worker=f'Worker {k}: {workers_data[k][1]} (Разряд {model.worker_qualification[k]})',
                     Task=f"Worker {k}: is unavailable",
                     Start=time_to_datetime_str(base_time, unavailability[0]),
                     Finish=time_to_datetime_str(base_time, unavailability[1]),
                     Resource=f"Worker unavailability",
                     Color="grey"
-                )
-                gantt_data.append(task_data)
-            for j in model.jobs:
-                if model.worker_assigned[j, k].value > 0.5:
-                    start = time_to_datetime_str(base_time, model.start_time[j].value)
-                    finish = time_to_datetime_str(base_time, model.start_time[j].value + model.job_duration[j])
-                    project_id = model.task_to_project[j]
-                    
-                    task_data = dict(
-                        Worker=f'Worker {k}: {workers_data[k][1]} (Разряд {model.worker_qualification[k]})',
-                        Task=f"Worker {k}: {jobs_data[j][0]} (Разряд {model.job_required_qualification[j]})",
-                        Start=start,
-                        Finish=finish,
-                        Resource=f"Project {project_id}",
-                        Color=project_colors[project_id % len(project_colors)]
-                    )
-                    
-                    gantt_data.append(task_data)
-        df = pd.DataFrame(gantt_data)
-        order = sorted(df['Worker'].unique(), key=lambda x: int(x.split(" ")[1].replace(':', '')))
-    elif mode == 'projects':
-        # График по проектам
-        fig_title = "Schedule by Projects"
-        grouping_column = 'Project'
-
-        for idx, p in enumerate(project_data.keys()):
-            for j in [j for j, proj in task_to_project.items() if proj == p]:
+            )
+            gantt_data.append(task_data)
+        for j in model.jobs:
+            if model.worker_assigned[j, k].value > 0.5:
                 start = time_to_datetime_str(base_time, model.start_time[j].value)
                 finish = time_to_datetime_str(base_time, model.start_time[j].value + model.job_duration[j])
+                project_id = model.task_to_project[j]
+                    
+                task_data = dict(
+                        Worker=f'Worker {k}: {workers_data[k][1]} (Разряд {model.worker_qualification[k]})',
+                        Task=f"Worker {k}:  job {j} {jobs_data[j][0]} (Разряд {model.job_required_qualification[j]})",
+                        Start=start,
+                        Finish=finish,
+                        Resource=f"Project {project_data[project_id][2]}",
+                        Color=project_colors[project_id % len(project_colors)]
+                )
+                    
+                gantt_data.append(task_data)
+    df = pd.DataFrame(gantt_data)
+    order = sorted(df['Worker'].unique(), key=lambda x: int(x.split(" ")[1].replace(':', '')))
+    return create_gantt_chart(df, grouping_column, fig_title, order, model, show)
 
-                for k in model.workers:
-                    if model.worker_assigned[j, k].value > 0.5:
-                        task_data = dict(
-                            Project=f"Project {p}",
+def plot_gantt_schedule_projects(model, show=True):
+    gantt_data = []
+
+    project_colors = [convert_color(c) for c in plt.cm.Paired(np.linspace(0, 1, len(project_data)))]
+    # График по проектам
+    fig_title = "Schedule by Projects"
+    grouping_column = 'Project'
+
+    for idx, p in enumerate(project_data.keys()):
+        for j in [j for j, proj in task_to_project.items() if proj == p]:
+            start = time_to_datetime_str(base_time, model.start_time[j].value)
+            finish = time_to_datetime_str(base_time, model.start_time[j].value + model.job_duration[j])
+
+            for k in model.workers:
+                if model.worker_assigned[j, k].value > 0.5:
+                    task_data = dict(
+                            Project=f"{project_data[p][2]}",
                             Task=f"Project {p}: {jobs_data[j][0]}",
                             Start=start,
                             Finish=finish,
                             Resource=f"Worker {k}",
-                        )
+                    )
                         
-                        gantt_data.append(task_data)
-        df = pd.DataFrame(gantt_data)
-        order = sorted(df['Project'].unique(), key=lambda x: int(x.split(" ")[1]))
-    # Создаем диаграмму Ганта
-      # Преобразуем в DataFrame для удобства
-
-    # grouped = df.groupby([grouping_column]).agg({
-    #     'Start': 'min',
-    #     'Finish': 'max'
-    # }).reset_index()
+                    gantt_data.append(task_data)
+    df = pd.DataFrame(gantt_data)
+    order = [project_data[p][2] for p in sorted(project_data.keys())]
+    return create_gantt_chart(df, grouping_column, fig_title, order, model, show)
+ 
 
     
-
+def create_gantt_chart(df, grouping_column, fig_title, order, model, show):
     fig = px.timeline(df, 
                   x_start="Start", 
                   x_end="Finish", 
