@@ -1,12 +1,13 @@
 import itertools
 import random
+import json
 
 random.seed(12345)
 
 # Настройки для генерации данных
 num_workers = 20  # Вот новый параметр для общего количества рабочих
-num_jobs = 100  # Общее количество работ
-num_projects = 20  # Количество проектов
+num_jobs = 50  # Общее количество работ
+num_projects = 10  # Количество проектов
 base_salary = 50
 salary_increment = 5
 base_duration = 5
@@ -18,24 +19,15 @@ worker_types = ["Токарь", "Слесарь", "Сверловщик", "То�
 
 # Генерация данных о работниках
 workers_data = {}
-max_grade_per_type = num_workers // len(worker_types)
-grade_counter = {worker_type: 1 for worker_type in worker_types}
-
-for worker_id in range(1, num_workers + 1):
-    worker_type_index = (worker_id - 1) % len(worker_types)
-    worker_type = worker_types[worker_type_index]
-    job_type = job_types[worker_type_index]
-    
-    # Проверяем, какой разряд должен быть у рабочего
-    grade = grade_counter[worker_type]
-    salary = base_salary + (grade - 1) * salary_increment
-    
-    workers_data[worker_id] = (job_type, worker_type, grade, salary, None)
-    
-    # Обновляем счетчик разряда для следующего рабочего того же типа
-    grade_counter[worker_type] += 1
-    if grade_counter[worker_type] > max_grade_per_type:
-        grade_counter[worker_type] = 1 
+for worker_type in worker_types:
+    # Генерируем равномерное распределение разрядов от 1 до 5 для каждого типа рабочего
+    grades = itertools.cycle(range(1, 6))
+    for _ in range(num_workers // len(worker_types)):
+        grade = next(grades)
+        salary = base_salary + (grade - 1) * salary_increment
+        worker_id = len(workers_data) + 1
+        job_type = job_types[worker_types.index(worker_type)]
+        workers_data[worker_id] = (job_type, worker_type, grade, salary, None)
 # Генерация данных о работах и проектах
 jobs_data = {}
 project_data = {i: ([], random.randint(base_duration * 60, 480)) for i in range(1, num_projects + 1)}  # здесь изменен способ определения дедлайна
@@ -68,12 +60,25 @@ for i in range(1, num_jobs + 1):
 
 # Обновление данных проекта с учетом распределенных работ
 for project_id in project_ids:
-    project_data[project_id][0].extend(project_jobs[project_id])
+    project_jobs_list = project_jobs[project_id]
+    # Установка дедлайна с учетом максимального ограничения
+    deadline = min((project_id - 1) * 60 + base_duration * 60, 480)
+    # Формирование имени проекта
+    project_name = f'ring{project_id}'
+    project_data[project_id] = (project_jobs_list, deadline, project_name)
 
-# Обновляем дедлайны проектов до максимального значения, если требуется
-for project_id in project_data:
-    if project_data[project_id][1] > 480:
-        project_data[project_id] = (project_data[project_id][0], 480)
+workers_data_str = "\n".join(f"    {k}: {v}," for k, v in workers_data.items())
+jobs_data_str = "\n".join(f"    {k}: {v}," for k, v in jobs_data.items())
+project_data_str = "\n".join(f"    {k}: {v}," for k, v in project_data.items())
+
+# Формирование итоговой строки
+data_str = f"workers_data = {{\n{workers_data_str}\n}}\n\n" \
+           f"jobs_data = {{\n{jobs_data_str}\n}}\n\n" \
+           f"project_data = {{\n{project_data_str}\n}}"
+
+# Сохранение данных в текстовом файле
+with open('generated_data.txt', 'w', encoding='utf-8') as file:
+    file.write(data_str)
 # Вывод сгенерированных данных
 print("Workers Data:")
 for k, v in workers_data.items():
