@@ -834,6 +834,28 @@ def plot_worker_utilization_interactive(model, show=True):
         fig_json = plotly.io.to_json(fig)
         return fig_json
 
+def solution_from_file(model):
+    with open('schedule4.json', 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    operations = list(jobs_data.keys())
+    print(operations)
+    for machine in data:
+        for operation in machine:
+            print(f'current op index {operation[1]-1}')
+            current_operation = operations[operation[1]-1]
+            model.worker_assigned[current_operation, data.index(machine)+1].set_value(1)
+            model.worker_assigned[current_operation, data.index(machine)+1].fix()
+            print(f'machine {data.index(machine)+1} is set up to operation {current_operation}')
+            model.start_time[current_operation].set_value(operation[2])
+            model.start_time[current_operation].fix()
+            print(f'start time {operation[2]} fixed')
+            model.end_time[current_operation].set_value(operation[3])
+            model.end_time[current_operation].fix()
+            print(f'end time {operation[3]} fixed')
+    
+    return model
+
+
 
 
 # TODO разряды рабочих и влияние на временной норматив операции. 
