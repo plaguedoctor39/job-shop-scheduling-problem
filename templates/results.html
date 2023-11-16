@@ -78,7 +78,15 @@
             Plotly.newPlot('schedule-plotly-div', schedule_fig);
         </script>
 
+    
+    <h2>Projects Plot</h2>
+    <!-- <img src="/static/schedule_plot.png" alt="Schedule Plot"> -->
+    <div id="projects-plotly-div"></div>
 
+        <script type="text/javascript">
+            var projects_fig = {{ projects_fig | safe }};
+            Plotly.newPlot('projects-plotly-div', projects_fig);
+        </script>
     <!-- Вставка графика utilization_plot.png -->
     <h2>Worker Utilization Plot</h2>
     <!-- <img src="/static/utilization_plot.png" alt="Worker Utilization Plot"> -->
