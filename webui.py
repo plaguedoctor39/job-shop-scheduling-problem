@@ -21,6 +21,7 @@ def index():
         model = build_model(param1, param2, hard_deadline=hard_deadline)
         # model.start_time[120].set_value(60)
         # model.start_time[120].fix()  
+        model = solution_from_file(model)
         # model.worker_assigned[255, 6].set_value(0)
         # model.worker_assigned[255, 6].fix()
         # # model.start_time[105].set_value(100)
