@@ -6,38 +6,27 @@ timer.tic('start')
 report_timing()
 print('Building model')
 print('--------------')
-model11 = build_model(1,1,hard_deadline=False)
+model11 = build_model(1000,0.8,hard_deadline=False)
 model11.write(filename='model.mps', format=ProblemFormat.mps)
 # model11 = load_model_from_file()
 timer.toc('Built model')
-model11 = solution_from_file(model11)
+
+# здесь загрузка готового решения, задать файл в функции в jssp.py, убрать комментирование
+# model11 = solution_from_file(model11)
+
+
 # model11.worker_assigned[55,10].set_value(0)
 # model11.worker_assigned[55,10].fix()  
 solve_model(model11)
-# Для добавления пользовательского решения (доделать)
-# saved_solution = {}
-# for v in model11.component_objects(Var):
-#     saved_solution[v.name] = v
-
-# for v_name, value in saved_solution.items():
-#     getattr(model11, v_name).value = value  
 
 # model11.worker_assigned[35,16].set_value(1)
 # model11.worker_assigned[35,16].fix() 
 # solve_model(model11)
 timer.toc('Solved')
-# Итерация по всем рабочим и временным периодам и вывод их статуса недоступности
-# for worker in model11.workers:
-#     for time in model11.time_periods:
-#         unavailable = model11.WorkerUnavailable[worker, time].value
-#         if model11.worker_unavailability[worker]:
-#             print(f"Worker {worker} at time {time}: {model11.worker_unavailability[worker]} {unavailable} {'Unavailable' if unavailable else 'Available'} {[model11.WorkDuringTime[j, worker, time].value for j in model11.jobs]}")
-
-#         print(f'{[model11.WorkDuringTime[j, worker, time].value for j in model11.jobs]}')
-
 
 plot_gantt_schedule(model11)
 plot_gantt_schedule_projects(model11)
+plot_worker_utilization_interactive(model11)
 
 # save_model_to_file(model11)
 # plot_schedule(model11, show=True, mode='workers')
