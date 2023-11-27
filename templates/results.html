@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Results</title>
+    <title>Результаты Модели</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body class="container mt-4">
 
-    <h1 class="mb-4">Model Results</h1>
+    <h1 class="mb-4">Результаты Модели</h1>
 
-    <h3>Project Deadlines and End Times</h3>
+    <h3>Сроки и Время Завершения Проектов</h3>
     <table class="table table-bordered table-hover">
         <thead class="thead-light">
             <tr>
-                <th>Project ID</th>
-                <th>End Time</th>
-                <th>Deadline</th>
+                <th>ID Проекта</th>
+                <th>Время Завершения</th>
+                <th>Дедлайн</th>
             </tr>
         </thead>
         <tbody>
@@ -30,15 +30,15 @@
         </tbody>
     </table>
 
-    <h3>Worker Performance and Costs</h3>
+    <h3>Эффективность и Затраты Рабочих</h3>
     <table class="table table-bordered table-hover">
         <thead class="thead-light">
             <tr>
-                <th>Worker ID</th>
-                <th>Specialization</th>
-                <th>Total Time</th>
-                <th>Tasks Assigned</th>
-                <th>Cost</th>
+                <th>ID Рабочего</th>
+                <th>Специализация</th>
+                <th>Общее Время</th>
+                <th>Назначенные Задачи</th>
+                <th>Стоимость</th>
             </tr>
         </thead>
         <tbody>
@@ -54,49 +54,39 @@
         </tbody>
     </table>
 
-    <h3>Additional Information</h3>
-    <ul>
-        <li>Average Work Time: {{ additional_info.average_work_time }}</li>
-        <li>Standard Deviation of Work Time: {{ additional_info.std_deviation }}</li>
-        <li>Total Expense: {{ additional_info.total_expense }}</li>
-        <li>Final End Time of Last Job: {{ additional_info.final_end_time }}</li>
-        <li>Value of the Objective Function: {{ additional_info.objective_value }}</li>
-    </ul>
+    <h2 class="mb-3">Дополнительная Информация</h2>
+    <div class="additional-info mb-4" style="font-weight: bold; font-size: 20px;">
+        <ul>
+            <li style="font-size: 30px">Общие Расходы: {{ additional_info.total_expense }}</li>
+            <li style="font-size: 30px">Время Завершения Последней Задачи: {{ additional_info.final_end_time }}</li>
+            <li></li>
+            <li>Среднее Рабочее Время: {{ additional_info.average_work_time }}</li>
+            <li>Стандартное Отклонение Рабочего Времени: {{ additional_info.std_deviation }}</li>
+            <li>Значение Целевой Функции: {{ additional_info.objective_value }}</li>
+        </ul>
+    </div>
 
-
-
-
-
-    
-    <!-- Вставка графика schedule_plot.png -->
-    <h2>Schedule Plot</h2>
-    <!-- <img src="/static/schedule_plot.png" alt="Schedule Plot"> -->
+    <h2>График Расписания</h2>
     <div id="schedule-plotly-div"></div>
+    <script type="text/javascript">
+        var schedule_fig = {{ schedule_fig | safe }};
+        Plotly.newPlot('schedule-plotly-div', schedule_fig);
+    </script>
 
-        <script type="text/javascript">
-            var schedule_fig = {{ schedule_fig | safe }};
-            Plotly.newPlot('schedule-plotly-div', schedule_fig);
-        </script>
-
-    
-    <h2>Projects Plot</h2>
-    <!-- <img src="/static/schedule_plot.png" alt="Schedule Plot"> -->
+    <h2>График Работ</h2>
     <div id="projects-plotly-div"></div>
+    <script type="text/javascript">
+        var projects_fig = {{ projects_fig | safe }};
+        Plotly.newPlot('projects-plotly-div', projects_fig);
+    </script>
 
-        <script type="text/javascript">
-            var projects_fig = {{ projects_fig | safe }};
-            Plotly.newPlot('projects-plotly-div', projects_fig);
-        </script>
-    <!-- Вставка графика utilization_plot.png -->
-    <h2>Worker Utilization Plot</h2>
-    <!-- <img src="/static/utilization_plot.png" alt="Worker Utilization Plot"> -->
+    <h2>График Занятости Рабочих</h2>
     <div id="utilization-plotly-div"></div>
+    <script type="text/javascript">
+        var worker_util_fig = {{ worker_util_fig | safe }};
+        Plotly.newPlot('utilization-plotly-div', worker_util_fig);
+    </script>
 
-        <script type="text/javascript">
-            var worker_util_fig = {{ worker_util_fig | safe }};
-            Plotly.newPlot('utilization-plotly-div', worker_util_fig);
-        </script>
-
-    <a href="{{ url_for('index') }}" class="btn btn-primary mt-4">Back to Model Builder</a>
+    <a href="{{ url_for('index') }}" class="btn btn-primary mt-4">Вернуться к Построителю Модели</a>
 </body>
 </html>
