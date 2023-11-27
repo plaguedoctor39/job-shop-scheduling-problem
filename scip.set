@@ -3358,7 +3358,7 @@ presolving/milp/timing = 8
 
 # maximum number of threads presolving may use (0: automatic)
 # [type: int, advanced: FALSE, range: [0,2147483647], default: 1]
-presolving/milp/threads = 64
+presolving/milp/threads = 10
 
 # maximal possible fillin for substitutions to be considered
 # [type: int, advanced: FALSE, range: [-2147483648,2147483647], default: 3]
