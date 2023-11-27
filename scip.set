@@ -974,7 +974,7 @@ parallel/mode = 1
 
 # the minimum number of threads used during parallel solve
 # [type: int, advanced: FALSE, range: [0,64], default: 1]
-parallel/minnthreads = 32
+parallel/minnthreads = 64
 
 # the maximum number of threads used during parallel solve
 # [type: int, advanced: FALSE, range: [0,64], default: 8]
@@ -3358,7 +3358,7 @@ presolving/milp/timing = 8
 
 # maximum number of threads presolving may use (0: automatic)
 # [type: int, advanced: FALSE, range: [0,2147483647], default: 1]
-presolving/milp/threads = 0
+presolving/milp/threads = 64
 
 # maximal possible fillin for substitutions to be considered
 # [type: int, advanced: FALSE, range: [-2147483648,2147483647], default: 3]
