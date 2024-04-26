@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Сценарии</title>
+    <style>
+        .button {
+            padding: 10px 20px; 
+            margin: 10px; 
+            font-size: 16px; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Выберите сценарий:</h1>
+    <div>
+        {% for scenario in scenarios %}
+            <button class="button" onclick="location.href='{{ url_for('scenario', name=scenario) }}'">{{ names[scenario] }}</button>
+        {% endfor %}
+    </div>
+</body>
+</html>
