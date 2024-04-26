@@ -4,7 +4,7 @@ import random
 
 
 h = highspy.Highs()
-filename = 'model.mps'
+filename = 'simplified_model2023-12-14.mps'
 h.readModel(filename)
 h.run()
 basis = h.getBasis()

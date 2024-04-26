@@ -21,10 +21,10 @@ def index():
         model = build_model(param1, param2, hard_deadline=hard_deadline)
     
         # model = solution_from_file(model)
-        # model.worker_assigned[25, 16].set_value(1)
-        # model.worker_assigned[25, 16].fix()
-        # model.start_time[25].set_value(5)
-        # model.start_time[25].fix()
+        # model.worker_assigned[315, 14].set_value(1)
+        # model.worker_assigned[315, 14].fix()
+        # model.start_time[315].set_value(0)
+        # model.start_time[315].fix()
     
         result = solve_model(model)
         

@@ -2,7 +2,7 @@
 
 # branching score function ('s'um, 'p'roduct, 'q'uotient)
 # [type: char, advanced: TRUE, range: {spq}, default: p]
-branching/scorefunc = p
+branching/scorefunc = s
 
 # branching score factor to weigh downward and upward gain prediction in sum score function
 # [type: real, advanced: TRUE, range: [0,1], default: 0.167]
@@ -266,7 +266,7 @@ display/lpinfo = FALSE
 
 # display all violations for a given start solution / the best solution after the solving process?
 # [type: bool, advanced: FALSE, range: {TRUE,FALSE}, default: FALSE]
-display/allviols = FALSE
+display/allviols = TRUE
 
 # should the relevant statistics be displayed at the end of solving?
 # [type: bool, advanced: FALSE, range: {TRUE,FALSE}, default: TRUE]
@@ -310,7 +310,7 @@ limits/memory = 8796093022207
 
 # solving stops, if the relative gap = |primal - dual|/MIN(|dual|,|primal|) is below the given value, the gap is 'Infinity', if primal and dual bound have opposite signs
 # [type: real, advanced: FALSE, range: [0,1.79769313486232e+308], default: 0]
-limits/gap = 0
+limits/gap = 0.001
 
 # solving stops, if the absolute gap = |primalbound - dualbound| is below the given value
 # [type: real, advanced: FALSE, range: [0,1.79769313486232e+308], default: 0]
@@ -358,7 +358,7 @@ lp/solvedepth = -1
 
 # LP algorithm for solving initial LP relaxations (automatic 's'implex, 'p'rimal simplex, 'd'ual simplex, 'b'arrier, barrier with 'c'rossover)
 # [type: char, advanced: FALSE, range: {spdbc}, default: s]
-lp/initalgorithm = s
+lp/initalgorithm = d
 
 # LP algorithm for resolving LP relaxations if a starting basis exists (automatic 's'implex, 'p'rimal simplex, 'd'ual simplex, 'b'arrier, barrier with 'c'rossover)
 # [type: char, advanced: FALSE, range: {spdbc}, default: s]
@@ -506,7 +506,7 @@ memory/savefac = 0.8
 
 # memory growing factor for dynamically allocated arrays
 # [type: real, advanced: TRUE, range: [1,10], default: 1.2]
-memory/arraygrowfac = 1.2
+memory/arraygrowfac = 1.5
 
 # initial size of dynamically allocated arrays
 # [type: int, advanced: TRUE, range: [0,2147483647], default: 4]
@@ -550,7 +550,7 @@ misc/resetstat = TRUE
 
 # should only solutions be checked which improve the primal bound
 # [type: bool, advanced: FALSE, range: {TRUE,FALSE}, default: FALSE]
-misc/improvingsols = FALSE
+misc/improvingsols = TRUE
 
 # should the reason be printed if a given start solution is infeasible
 # [type: bool, advanced: FALSE, range: {TRUE,FALSE}, default: TRUE]
@@ -598,7 +598,7 @@ misc/scaleobj = TRUE
 
 # should detailed statistics for diving heuristics be shown?
 # [type: bool, advanced: FALSE, range: {TRUE,FALSE}, default: FALSE]
-misc/showdivingstats = FALSE
+misc/showdivingstats = TRUE
 
 # objective value for reference purposes
 # [type: real, advanced: FALSE, range: [-1.79769313486232e+308,1.79769313486232e+308], default: 1e+99]
@@ -970,7 +970,7 @@ separating/poolfreq = 10
 
 # parallel optimisation mode, 0: opportunistic or 1: deterministic.
 # [type: int, advanced: FALSE, range: [0,1], default: 1]
-parallel/mode = 1
+parallel/mode = 0
 
 # the minimum number of threads used during parallel solve
 # [type: int, advanced: FALSE, range: [0,64], default: 1]
@@ -5482,7 +5482,7 @@ heuristics/feaspump/beforecuts = TRUE
 
 # should an iterative round-and-propagate scheme be used to find the integral points?
 # [type: bool, advanced: FALSE, range: {TRUE,FALSE}, default: FALSE]
-heuristics/feaspump/usefp20 = FALSE
+heuristics/feaspump/usefp20 = TRUE
 
 # should a random perturbation be performed if a feasible solution was found?
 # [type: bool, advanced: FALSE, range: {TRUE,FALSE}, default: TRUE]
@@ -9838,7 +9838,7 @@ separating/oddcycle/maxnlevels = 20
 
 # maximal number of oddcycle cuts generated per chosen variable as root of the level graph
 # [type: int, advanced: TRUE, range: [0,2147483647], default: 1]
-separating/oddcycle/maxcutsroot = 1
+separating/oddcycle/maxcutsroot = 1000
 
 # maximal number of oddcycle cuts generated in every level of the level graph
 # [type: int, advanced: TRUE, range: [0,2147483647], default: 50]
@@ -10462,15 +10462,15 @@ concurrent/scip-easycip/prefprio = 0
 
 # the preferred number concurrent solvers of type <scip-feas> with respect to the number of threads
 # [type: real, advanced: FALSE, range: [0,1], default: 0]
-concurrent/scip-feas/prefprio = 0
+concurrent/scip-feas/prefprio = 1
 
 # the preferred number concurrent solvers of type <scip-hardlp> with respect to the number of threads
 # [type: real, advanced: FALSE, range: [0,1], default: 0]
-concurrent/scip-hardlp/prefprio = 0
+concurrent/scip-hardlp/prefprio = 1
 
 # the preferred number concurrent solvers of type <scip-opti> with respect to the number of threads
 # [type: real, advanced: FALSE, range: [0,1], default: 0]
-concurrent/scip-opti/prefprio = 0
+concurrent/scip-opti/prefprio = 1
 
 # the preferred number concurrent solvers of type <scip-counter> with respect to the number of threads
 # [type: real, advanced: FALSE, range: [0,1], default: 0]

@@ -98,67 +98,73 @@ logging.getLogger('pyomo.util.infeasible').setLevel(logging.INFO)
 # }
 
 # необходимо только для импорта данных старой генерации, если не нужно закомментировать блок кода
-workers_data = {}
-jobs_data = {}
-project_data = {}
+# workers_data = {}
+# jobs_data = {}
+# project_data = {}
 
-# для импорта данных старой генерации
-with open('generated_data_import.txt', 'r', encoding='utf-8') as file:
-    content = file.read()
-    exec(content)  
+# # для импорта данных старой генерации
+# with open('generated_data_import.txt', 'r', encoding='utf-8') as file:
+#     content = file.read()
+#     exec(content)  
 
 # экспорт данных в json-файл, если необходимо
-with open('data.json', 'w', encoding='utf-8') as file:
-    json.dump({
-        'workers_data': workers_data,
-        'jobs_data': jobs_data,
-        'project_data': project_data
-    }, file, ensure_ascii=False, indent=4)
+# with open('data.json', 'w', encoding='utf-8') as file:
+#     json.dump({
+#         'Machines': workers_data,
+#         'Operations': jobs_data,
+#         'Jobs': project_data
+#     }, file, ensure_ascii=False, indent=4)
 
 # загрузка данных из json-файла
-with open('data.json', 'r', encoding='utf-8') as file:
+with open('data_from_df2023-12-14.json', 'r', encoding='utf-8') as file:
     data = json.load(file)
 
-  
-# преобразование данных для текстового файла
-workers_data = {int(k): v for k, v in data['workers_data'].items()}
-jobs_data = {int(k): v for k, v in data['jobs_data'].items()}
-project_data = {int(k): v for k, v in data['project_data'].items()}
+# workers_data = {k: v for k, v in data['Machines'].items()}
+# jobs_data = {k: v for k, v in data['Operations'].items()}
+# project_data = {k: v for k, v in data['Jobs'].items()}
 
-workers_data_str = "\n".join(f"    {k}: {v}," for k, v in workers_data.items())
-jobs_data_str = "\n".join(f"    {k}: {v}," for k, v in jobs_data.items())
-project_data_str = "\n".join(f"    {k}: {v}," for k, v in project_data.items())
+# # преобразование данных для текстового файла
+workers_data = {int(k): v for k, v in data['Machines'].items()}
+jobs_data = {int(k): v for k, v in data['Operations'].items()}
+project_data = {int(k): v for k, v in data['Jobs'].items()}
 
-# Формирование итоговой строки
-data_str = f"workers_data = {{\n{workers_data_str}\n}}\n\n" \
-           f"jobs_data = {{\n{jobs_data_str}\n}}\n\n" \
-           f"project_data = {{\n{project_data_str}\n}}"
+# workers_data_str = "\n".join(f"    {k}: {v}," for k, v in workers_data.items())
+# jobs_data_str = "\n".join(f"    {k}: {v}," for k, v in jobs_data.items())
+# project_data_str = "\n".join(f"    {k}: {v}," for k, v in project_data.items())
 
-# Сохранение данных в текстовом файле
-with open('generated_data.txt', 'w', encoding='utf-8') as file:
-    file.write(data_str)
+# # Формирование итоговой строки
+# data_str = f"Machines = {{\n{workers_data_str}\n}}\n\n" \
+#            f"Operations = {{\n{jobs_data_str}\n}}\n\n" \
+#            f"Jobs = {{\n{project_data_str}\n}}"
 
-# Создание проекта недоступности
-is_unavailability_present = any(worker_info[4] is not None for worker_info in workers_data.values())
-unavailability_jobs = {}
-job_id = max(jobs_data.keys()) + 1  # Начинаем с ID, следующего за последним в jobs_data
+# # Сохранение данных в текстовом файле
+# with open('generated_data.txt', 'w', encoding='utf-8') as file:
+#     file.write(data_str)
 
-if is_unavailability_present:
-    project_data[0] = ([], 480, 'unavailability')
+# # Создание проекта недоступности
+# is_unavailability_present = any(worker_info[4] is not None for worker_info in workers_data.values())
+# unavailability_jobs = {}
+# job_id = max(jobs_data.keys()) + 1  # Начинаем с ID, следующего за последним в jobs_data
 
-    for worker_id, worker_info in workers_data.items():
-        unavailability = worker_info[4]
-        if unavailability:
-            unavailability_jobs[job_id] = (worker_info[0], unavailability[1] - unavailability[0], [], 1, worker_id)  # Разряд 1 для всех задач недоступности
-            project_data[0][0].append(job_id)  # Добавляем задачу в проект недоступности
-            job_id += 1
+# if is_unavailability_present:
+#     project_data[0] = ([], 480, 'unavailability')
 
-    # Объединяем jobs_data с задачами недоступности
-    jobs_data.update(unavailability_jobs)
+#     for worker_id, worker_info in workers_data.items():
+#         unavailability = worker_info[4]
+#         if unavailability:
+#             unavailability_jobs[job_id] = (worker_info[0], unavailability[1] - unavailability[0], [], 1, worker_id)  # Разряд 1 для всех задач недоступности
+#             project_data[0][0].append(job_id)  # Добавляем задачу в проект недоступности
+#             job_id += 1
 
-# print(project_data)
-# print(jobs_data)
+#     # Объединяем jobs_data с задачами недоступности
+#     jobs_data.update(unavailability_jobs)
 
+print(workers_data)
+print(project_data)
+print(jobs_data)
+current_weight_makespan = 0
+current_weight_cost = 0
+unavailability_jobs = []
 task_to_project = {j: p for p, (job_list, _, n) in project_data.items() for j in job_list}
 
 for j in jobs_data.keys():
@@ -181,6 +187,7 @@ def build_model(weight_makespan, weight_costs=1, hard_deadline=False):
     model.workers = Set(initialize=list(workers_data.keys()))
     model.jobs = Set(initialize=list(jobs_data.keys()))
     model.projects = Set(initialize=project_data.keys())
+    
 
     # Parameters
     model.specialization = Param(model.workers, initialize={k: v[0] for k, v in workers_data.items()})
@@ -193,31 +200,42 @@ def build_model(weight_makespan, weight_costs=1, hard_deadline=False):
     model.worker_qualification = Param(model.workers, initialize={k: v[2] for k, v in workers_data.items()})
     model.job_required_qualification = Param(model.jobs, initialize={k: v[3] for k, v in jobs_data.items()})
     model.cost_rate = Param(model.workers, initialize={k: v[3] for k, v in workers_data.items()})
-    model.worker_unavailability = Param(model.workers, initialize={k: v[4] for k, v in workers_data.items()})
+    # model.worker_unavailability = Param(model.workers, initialize={k: v[4] for k, v in workers_data.items()})
     unavailability_task_flags = {job_id: 1 if job_id in unavailability_jobs else 0 for job_id in model.jobs}
     model.is_unavailability_task = Param(model.jobs, within=Binary, initialize=unavailability_task_flags)
     model.activate_makespan = Param(within=Boolean, default=True, mutable=True)
 
+
     
 
     # Variables
-    model.start_time = Var(model.jobs, domain=NonNegativeReals)
-    model.end_time = Var(model.jobs, domain=NonNegativeReals)
-    model.worker_assigned = Var(model.jobs, model.workers, domain=Binary)
-    model.makespan = Var(domain=NonNegativeReals)
-    model.idle_time = Var(model.workers, domain=NonNegativeReals) # время простоя рабочего
-    model.idle_time_between_tasks = Var(model.jobs, model.jobs, model.workers, domain=NonNegativeReals) # время простоя между задачами для рабочего
-    model.y = Var(model.jobs, model.jobs, model.workers, within=Binary) # вспомогательная бинарная переменная для реализации ограничения неперекрытия
+    # model.start_time = Var(model.jobs, domain=NonNegativeReals)
+    # model.end_time = Var(model.jobs, domain=NonNegativeReals)
+    # model.worker_assigned = Var(model.jobs, model.workers, domain=Binary)
+    # model.makespan = Var(domain=NonNegativeReals)
+    # model.idle_time = Var(model.workers, domain=NonNegativeReals) # время простоя рабочего
+    # # model.idle_time_between_tasks = Var(model.jobs, model.jobs, model.workers, domain=NonNegativeReals) # время простоя между задачами для рабочего
+    # model.y = Var(model.jobs, model.jobs, model.workers, within=Binary) # вспомогательная бинарная переменная для реализации ограничения неперекрытия
 
-    model.worker_used = Var(model.workers, domain=Binary)
-    model.max_work_time = Var(domain=NonNegativeReals)
-    model.min_work_time = Var(domain=NonNegativeReals)
-    model.worker_deviation = Var(model.workers, domain=NonNegativeReals)  # отклонение времени каждого рабочего от среднего значения
-    model.average_work_time = Var(domain=NonNegativeReals)  # среднее рабочее время
-    model.project_delay = Var(model.projects, within=NonNegativeReals)
+    # model.worker_used = Var(model.workers, domain=Binary)
+    # # model.max_work_time = Var(domain=NonNegativeReals)
+    # # model.min_work_time = Var(domain=NonNegativeReals)
+    # # model.worker_deviation = Var(model.workers, domain=NonNegativeReals)  # отклонение времени каждого рабочего от среднего значения
+    # # model.average_work_time = Var(domain=NonNegativeReals)  # среднее рабочее время
+    # model.project_delay = Var(model.projects, within=NonNegativeReals)
+    model.start_time = Var(model.jobs, domain=NonNegativeReals, name="start_time")
+    model.end_time = Var(model.jobs, domain=NonNegativeReals, name="end_time")
+    model.worker_assigned = Var(model.jobs, model.workers, domain=Binary, name="worker_assigned")
+    model.makespan = Var(domain=NonNegativeReals, name="makespan")
+    model.idle_time = Var(model.workers, domain=NonNegativeReals, name="idle_time")
+    model.y = Var(model.jobs, model.jobs, model.workers, within=Binary, name="y")
+    model.worker_used = Var(model.workers, domain=Binary, name="worker_used")
+    model.project_delay = Var(model.projects, within=NonNegativeReals, name="project_delay")
+
 
 
     bigM = sum(model.job_duration.values())
+    # bigM = 100
 
     weight_delay = 1  # это весовой коэффициент, который можно настроить
 
@@ -231,12 +249,16 @@ def build_model(weight_makespan, weight_costs=1, hard_deadline=False):
     #     sense=minimize
     # )
     weight_idle = 1
+    global current_weight_cost
+    global current_weight_makespan
+    current_weight_cost = weight_costs
+    current_weight_makespan = weight_makespan
     model.obj = Objective(
-        expr=weight_makespan * model.makespan +
-            weight_costs * sum(model.worker_assigned[j, k] * model.job_duration[j] * model.cost_rate[k] 
+        expr=weight_makespan * model.makespan 
+            + weight_costs * sum(model.worker_assigned[j, k] * model.job_duration[j] * model.cost_rate[k] 
                             for j in model.jobs for k in model.workers if not model.is_unavailability_task[j]) 
-                            # +  1 * idle_time_penalty
-                            # + 0.01 * sum(model.start_time[j] for j in model.jobs)
+                            + 0.1 * sum(model.worker_used[k] for k in model.workers)
+                            # + 1 * sum(model.start_time[j] for j in model.jobs)
                             # + 0.1 * sum(model.end_time[j] for j in model.jobs if not model.is_unavailability_task[j])
                             # + weight_idle * sum(model.idle_time[k] for k in model.workers)
             # weight_delay * sum(model.project_delay[p] for p in model.projects) +
@@ -255,17 +277,17 @@ def build_model(weight_makespan, weight_costs=1, hard_deadline=False):
     # Задача не может начаться до завершения всех ее предшественников
     def general_precedence_rule(model, i):
         return model.start_time[i] >= sum(model.end_time[j] for j in model.predecessors[i])
-    model.general_precedence_constraint = Constraint(model.jobs, rule=general_precedence_rule)
+    # model.general_precedence_constraint = Constraint(model.jobs, rule=general_precedence_rule)
 
     # если рабочий используется хотя бы для одной работы, то его переменная worker_used равна 1
-    # def worker_usage_rule(model, i, k):
-    #     return model.worker_assigned[i, k] <= model.worker_used[k]
+    def worker_usage_rule(model, i, k):
+        return model.worker_assigned[i, k] <= model.worker_used[k]
 
     # model.worker_usage_constraint = Constraint(model.jobs, model.workers, rule=worker_usage_rule)
 
     # назначение рабочих
     def worker_assignment_rule(model, i, k):
-        specialization_match = model.specialization[k] == model.job_required_specialization[i]
+        specialization_match = model.job_required_specialization[i] in model.specialization[k]
         qualification_match = model.worker_qualification[k] >= model.job_required_qualification[i]
         
         if specialization_match and qualification_match:
@@ -273,7 +295,7 @@ def build_model(weight_makespan, weight_costs=1, hard_deadline=False):
         else:
             return model.worker_assigned[i, k] == 0
 
-    model.worker_assignment_constraint = Constraint(model.jobs, model.workers, rule=worker_assignment_rule)
+    # model.worker_assignment_constraint = Constraint(model.jobs, model.workers, rule=worker_assignment_rule)
 
     # Определим среднее рабочее время
     # def average_work_time_rule(model):
@@ -286,7 +308,6 @@ def build_model(weight_makespan, weight_costs=1, hard_deadline=False):
     # model.worker_deviation_constraint = Constraint(model.workers, rule=worker_deviation_rule)
 
 
-    # задачи, назначенные одному рабочему, не перекрываются по времени
     def non_overlap_rule_1(model, i, j, k):
         if i != j and are_unrelated(i, j):
             return model.start_time[j] >= model.end_time[i] - bigM * (1 - model.worker_assigned[i, k]) - bigM * (1 - model.y[i, j, k])
@@ -297,20 +318,20 @@ def build_model(weight_makespan, weight_costs=1, hard_deadline=False):
             return model.start_time[i] >= model.end_time[j] - bigM * (1 - model.worker_assigned[j, k]) - bigM * model.y[i, j, k]
         return Constraint.Skip
 
-    model.non_overlap_constraint_1 = Constraint(model.jobs, model.jobs, model.workers, rule=non_overlap_rule_1)
-    model.non_overlap_constraint_2 = Constraint(model.jobs, model.jobs, model.workers, rule=non_overlap_rule_2)
-
+    # model.non_overlap_constraint_1 = Constraint(model.jobs, model.jobs, model.workers, rule=non_overlap_rule_1)
+    # model.non_overlap_constraint_2 = Constraint(model.jobs, model.jobs, model.workers, rule=non_overlap_rule_2)
+    
     # конечное время задачи равно начальному времени плюс продолжительность
     def end_time_rule(model, i):
         return model.end_time[i] == model.start_time[i] + model.job_duration[i]
-    model.end_time_constraint = Constraint(model.jobs, rule=end_time_rule)
+    # model.end_time_constraint = Constraint(model.jobs, rule=end_time_rule)
 
 
     # вычисляет общее время простоя рабочего
     def idle_time_rule(model, k):
         total_assigned_time = sum(model.job_duration[i] * model.worker_assigned[i, k] for i in model.jobs)
         return model.idle_time[k] == model.makespan - total_assigned_time
-    model.idle_time_constraint = Constraint(model.workers, rule=idle_time_rule)
+    # model.idle_time_constraint = Constraint(model.workers, rule=idle_time_rule)
 
     # устанавливает, что все задачи должны завершиться до общего времени завершения
     def makespan_rule(model, i):
@@ -318,16 +339,16 @@ def build_model(weight_makespan, weight_costs=1, hard_deadline=False):
             return model.end_time[i] <= model.makespan
         else:
             return Constraint.Skip
-    model.makespan_constraint = Constraint(model.jobs, rule=makespan_rule)
+    # model.makespan_constraint = Constraint(model.jobs, rule=makespan_rule)
 
     # убеждается, что каждая задача назначена только одному рабочему
     def job_assignment_rule(model, i):
         return sum(model.worker_assigned[i, k] for k in model.workers) == 1
-    model.job_assignment_constraint = Constraint(model.jobs, rule=job_assignment_rule)
+    # model.job_assignment_constraint = Constraint(model.jobs, rule=job_assignment_rule)
 
-    def worker_time_limit_rule(model, k):
-        return sum(model.job_duration[i] * model.worker_assigned[i, k] for i in model.jobs) <= 8*60
-    model.worker_time_limit = Constraint(model.workers, rule=worker_time_limit_rule)
+    # def worker_time_limit_rule(model, k):
+    #     return sum(model.job_duration[i] * model.worker_assigned[i, k] for i in model.jobs) <= 96*60
+    # model.worker_time_limit = Constraint(model.workers, rule=worker_time_limit_rule)
 
     # def max_work_time_rule(model, k):
     #     return model.max_work_time >= sum(model.job_duration[j] * model.worker_assigned[j, k] for j in model.jobs)
@@ -353,8 +374,28 @@ def build_model(weight_makespan, weight_costs=1, hard_deadline=False):
     #     else:
     #         return model.end_time[last_task] <= project_data[p][1] + model.project_delay[p]
     # model.project_delay_constr = Constraint(model.projects, rule=project_delay_rule)
+    # def task_sequential_rule(model, i, j, k):
+    #     if i != j and model.worker_assigned[i, k] + model.worker_assigned[j, k] == 2:
+    #         return model.start_time[j] >= model.end_time[i]
+    #     else:
+    #         return Constraint.Skip
 
-    model.write(filename='model.mps', format=ProblemFormat.mps)
+    # model.task_sequential_constraint = Constraint(model.jobs, model.jobs, model.workers, rule=task_sequential_rule)
+
+    model.general_precedence_constraint = Constraint(model.jobs, rule=general_precedence_rule, name="general_precedence_constraint")
+    model.worker_usage_constraint = Constraint(model.jobs, model.workers, rule=worker_usage_rule, name="worker_usage_constraint")
+    model.worker_assignment_constraint = Constraint(model.jobs, model.workers, rule=worker_assignment_rule, name="worker_assignment_constraint")
+    model.non_overlap_constraint_1 = Constraint(model.jobs, model.jobs, model.workers, rule=non_overlap_rule_1, name="non_overlap_constraint_1")
+    model.non_overlap_constraint_2 = Constraint(model.jobs, model.jobs, model.workers, rule=non_overlap_rule_2, name="non_overlap_constraint_2")
+    model.end_time_constraint = Constraint(model.jobs, rule=end_time_rule, name="end_time_constraint")
+    model.idle_time_constraint = Constraint(model.workers, rule=idle_time_rule, name="idle_time_constraint")
+    model.makespan_constraint = Constraint(model.jobs, rule=makespan_rule, name="makespan_constraint")
+    model.job_assignment_constraint = Constraint(model.jobs, rule=job_assignment_rule, name="job_assignment_constraint")
+    # model.worker_time_limit = Constraint(model.workers, rule=worker_time_limit_rule, name="worker_time_limit_constraint")
+
+
+    # model.write(filename='model.mps', format=ProblemFormat.mps)
+    model.write(filename='model.mps', io_options={"symbolic_solver_labels": True})
     # model.write("model.nl")
     end_time = time.time()
     elapsed_time = end_time - start_time
@@ -362,26 +403,141 @@ def build_model(weight_makespan, weight_costs=1, hard_deadline=False):
     
     return model
 
+def build_model_with_timeslots(weight_makespan, weight_costs=1, num_time_slots=480):
+    start_time = time.time()
+    model = ConcreteModel()
+
+    # Sets
+    model.workers = Set(initialize=list(workers_data.keys()))
+    model.jobs = Set(initialize=list(jobs_data.keys()))
+    model.projects = Set(initialize=project_data.keys())
+    model.time_slots = RangeSet(1, num_time_slots)
+
+    # Parameters
+    model.specialization = Param(model.workers, initialize={k: v[0] for k, v in workers_data.items()})
+    model.job_duration = Param(model.jobs, initialize={k: v[1] for k, v in jobs_data.items()})
+    model.job_required_specialization = Param(model.jobs, within=Any, initialize={k: v[0] for k, v in jobs_data.items()})
+    model.predecessors = Param(model.jobs, within=Any, initialize={k: v[2] for k, v in jobs_data.items()})
+    model.task_to_project = Param(model.jobs, initialize=task_to_project)
+    model.worker_qualification = Param(model.workers, initialize={k: v[2] for k, v in workers_data.items()})
+    model.job_required_qualification = Param(model.jobs, initialize={k: v[3] for k, v in jobs_data.items()})
+    model.cost_rate = Param(model.workers, initialize={k: v[3] for k, v in workers_data.items()})
+    model.worker_unavailability = Param(model.workers, initialize={k: v[4] for k, v in workers_data.items()})
+    unavailability_task_flags = {job_id: 1 if job_id in unavailability_jobs else 0 for job_id in model.jobs}
+    model.is_unavailability_task = Param(model.jobs, within=Binary, initialize=unavailability_task_flags)
+    model.activate_makespan = Param(within=Boolean, default=True, mutable=True)
+
+
+
+    # Variables
+    model.job_in_time_slot = Var(model.jobs, model.time_slots, domain=Binary)
+    model.worker_assigned = Var(model.jobs, model.workers, domain=Binary)
+    model.start_time = Var(model.jobs, domain=NonNegativeReals)
+    model.end_time = Var(model.jobs, domain=NonNegativeReals)
+    model.makespan = Var(domain=NonNegativeReals)
+    model.worker_used = Var(model.workers, domain=Binary)
+    model.idle_time = Var(model.workers, domain=NonNegativeReals)
+
+
+    # Objective
+    global current_weight_cost
+    global current_weight_makespan
+    current_weight_cost = weight_costs
+    current_weight_makespan = weight_makespan
+
+    model.obj = Objective(expr=
+    weight_makespan * model.makespan 
+    + weight_costs * sum(model.worker_assigned[j, k] * model.job_duration[j] * model.cost_rate[k] for j in model.jobs for k in model.workers)
+    # + 0.1 * sum(model.worker_used[k] for k in model.workers)
+    # + 1 * sum(t * model.job_in_time_slot[j, t] 
+    #                     for j in model.jobs for t in model.time_slots)
+    , sense=minimize)
+
+    model.activate_makespan = True if weight_makespan > 0 else False
+
+    # Constraints
+    def job_time_slot_rule(model, j):
+        return sum(model.job_in_time_slot[j, t] for t in model.time_slots) == model.job_duration[j]
+    model.job_time_slot_constraint = Constraint(model.jobs, rule=job_time_slot_rule)
+
+    def non_overlap_rule(model, t, k):
+        # В каждом таймслоте 't' для каждого рабочего 'k' сумма всех задач, на которые он назначен в этом таймслоте, должна быть <= 1.
+        return sum(model.job_in_time_slot[j, t] * model.worker_assigned[j, k] for j in model.jobs) <= 1
+
+    model.non_overlap_constraint = Constraint(model.time_slots, model.workers, rule=non_overlap_rule)
+    def start_time_rule(model, j):
+        return model.start_time[j] == sum(t * model.job_in_time_slot[j, t] for t in model.time_slots)
+    model.start_time_constraint = Constraint(model.jobs, rule=start_time_rule)
+
+    def end_time_rule(model, j):
+        return model.end_time[j] == model.start_time[j] + model.job_duration[j]
+    model.end_time_constraint = Constraint(model.jobs, rule=end_time_rule)
+    
+    def general_precedence_rule(model, i):
+        return sum(model.time_slots[t] * model.job_in_time_slot[i, t] for t in model.time_slots) >= sum(model.end_time[j] for j in model.predecessors[i])
+    model.general_precedence_constraint = Constraint(model.jobs, rule=general_precedence_rule)
+
+    def worker_usage_rule(model, i, k):
+        return model.worker_assigned[i, k] <= model.worker_used[k]
+    model.worker_usage_constraint = Constraint(model.jobs, model.workers, rule=worker_usage_rule)
+
+    def worker_assignment_rule(model, i, k):
+        specialization_match = model.specialization[k] == model.job_required_specialization[i]
+        qualification_match = model.worker_qualification[k] >= model.job_required_qualification[i]
+        if specialization_match and qualification_match:
+            return model.worker_assigned[i, k] <= 1
+        else:
+            return model.worker_assigned[i, k] == 0
+    model.worker_assignment_constraint = Constraint(model.jobs, model.workers, rule=worker_assignment_rule)
+
+    def job_assignment_rule(model, i):
+        return sum(model.worker_assigned[i, k] for k in model.workers) == 1
+    model.job_assignment_constraint = Constraint(model.jobs, rule=job_assignment_rule)
+
+    def makespan_rule(model, i):
+        if not model.is_unavailability_task[i] and model.activate_makespan.value:
+            return model.makespan >= model.end_time[j]
+        else:
+            return Constraint.Skip
+    model.makespan_constraint = Constraint(model.jobs, rule=makespan_rule)
+
+    def idle_time_rule(model, k):
+        total_assigned_time = sum(model.job_duration[i] * model.worker_assigned[i, k] for i in model.jobs)
+        return model.idle_time[k] == model.makespan - total_assigned_time
+    model.idle_time_constraint = Constraint(model.workers, rule=idle_time_rule)
+
+    def worker_time_limit_rule(model, k):
+        return sum(model.job_duration[i] * model.worker_assigned[i, k] for i in model.jobs) <= 8*60
+    model.worker_time_limit = Constraint(model.workers, rule=worker_time_limit_rule)
+
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Build execution time: {elapsed_time:.2f} seconds")
+
+    return model
+
+
 def solve_model(model, custom_data = False):
     # Фиксируем задачи недоступности за рабочими
-    for job_id, job_info in unavailability_jobs.items():
-        worker_id = job_info[4]  # Получаем ID рабочего из задачи недоступности
+    # for job_id, job_info in unavailability_jobs.items():
+    #     worker_id = job_info[4]  # Получаем ID рабочего из задачи недоступности
 
-        # Фиксируем время начала и окончания задачи недоступности
-        start_unavail, end_unavail = workers_data[worker_id][4]
-        model.start_time[job_id].set_value(start_unavail)
-        # model.end_time[job_id].set_value(end_unavail)
-        model.start_time[job_id].fix()
-        # model.end_time[job_id].fix()
+    #     # Фиксируем время начала и окончания задачи недоступности
+    #     start_unavail, end_unavail = workers_data[worker_id][4]
+    #     model.start_time[job_id].set_value(start_unavail)
+    #     # model.end_time[job_id].set_value(end_unavail)
+    #     model.start_time[job_id].fix()
+    #     # model.end_time[job_id].fix()
 
-        # Назначаем задачу недоступности соответствующему рабочему
-        for k in model.workers:
-            if k == worker_id:
-                model.worker_assigned[job_id, k].set_value(1)
-                model.worker_assigned[job_id, k].fix()
-            else:
-                model.worker_assigned[job_id, k].set_value(0)
-                model.worker_assigned[job_id, k].fix()
+    #     # Назначаем задачу недоступности соответствующему рабочему
+    #     for k in model.workers:
+    #         if k == worker_id:
+    #             model.worker_assigned[job_id, k].set_value(1)
+    #             model.worker_assigned[job_id, k].fix()
+    #         else:
+    #             model.worker_assigned[job_id, k].set_value(0)
+    #             model.worker_assigned[job_id, k].fix()
     # пока неиспользуется
     if custom_data:
         for idx, i in enumerate(start_times, start=1):
@@ -395,6 +551,12 @@ def solve_model(model, custom_data = False):
     solver = SolverFactory('scip')
     # solver.options['threads'] = 32
     # solver.options['verbosity'] = 4
+    # solver.options['log_level'] = 1
+    # solver.options['mip_rel_gap'] = 0.01
+    # solver.options['logLevel'] = 3
+    
+    # solver.options['ratioGap'] = 0.01
+
     # solver.options['set/lp/initalgorithm'] = 'd'
     # solver.options['warmstart'] = True
     result = solver.solve(model, tee=True)
@@ -407,8 +569,8 @@ def solve_model(model, custom_data = False):
         # Log infeasible constraints
         log_infeasible_constraints(model)
 
-
-    if ((result.solver.status == SolverStatus.ok) and (result.solver.termination_condition == TerminationCondition.optimal)) or (result.solver.termination_condition == TerminationCondition.feasible):
+    if result.solver.status in [SolverStatus.ok, SolverStatus.warning] or result.solver.termination_condition not in [TerminationCondition.infeasible, TerminationCondition.noSolution]:
+    # if ((result.solver.status == SolverStatus.ok) and (result.solver.termination_condition == TerminationCondition.optimal)) or (result.solver.termination_condition == TerminationCondition.feasible):
         # Print the solution
         # print("\nWorker Assignments with Order:")
         # for k in model.workers:
@@ -492,17 +654,39 @@ def solve_model(model, custom_data = False):
         print(f"Value of the objective function: {objective_value}")
 
         # print(f'weight balance - {model.max_work_time.value - model.min_work_time.value}')
-        print(f'end time {sum(model.end_time[j].value for j in model.jobs if not model.is_unavailability_task[j]) * 0.1}')
-        print(f'cost rate {sum(model.worker_assigned[j, k].value * model.job_duration[j] * model.cost_rate[k] for j in model.jobs for k in model.workers if not model.is_unavailability_task[j]) * 0.002}')
-        print(f'makespan {model.makespan.value}')
+        # print(f'end time {sum(model.end_time[j].value for j in model.jobs if not model.is_unavailability_task[j]) * 0.1}')
+        print(f'cost rate {sum(model.worker_assigned[j, k].value * model.job_duration[j] * model.cost_rate[k] for j in model.jobs for k in model.workers if not model.is_unavailability_task[j]) * current_weight_cost}')
+        print(f'makespan {model.makespan.value * current_weight_makespan}')
+        print(f'idle weight {1 * sum(model.idle_time[k].value for k in model.workers)}')
         # print(f'delay {sum(model.project_delay[p].value for p in model.projects)}') 
-        # print(f'workers used {sum(model.worker_used[k].value for k in model.workers) * 15}')
-        print(f'projects end times {sum(model.end_time[project_data[p][0][-1]].value for p in model.projects)}')
+        print(f'workers used {sum(model.worker_used[k].value for k in model.workers) * 0.1}')
+        # print(f'projects end times {sum(model.end_time[project_data[p][0][-1]].value for p in model.projects)}')
 
         # If you wish to see the complete status and log of the solver
         # print(solver.solve(model, tee=True))
     else:
         print("No optimal solution found!")
+    
+    pyomo_start_times = {i: model.start_time[i].value for i in model.jobs}
+    pyomo_end_times = {i: model.end_time[i].value for i in model.jobs}
+
+    # Вывод значений переменных из модели Pyomo
+    print("\nЗначения переменных start_time и end_time в Pyomo:")
+    for identifier, start_time in pyomo_start_times.items():
+        end_time = pyomo_end_times.get(identifier, 0.0)
+        print(f"Задача {identifier} - Начало: {start_time}, Окончание: {end_time}")
+    pyomo_data = {
+        'Task': [],
+        'Start_Time_Pyomo': [],
+        'End_Time_Pyomo': []
+    }
+    for task, start_time in pyomo_start_times.items():
+        pyomo_data['Task'].append(task)
+        pyomo_data['Start_Time_Pyomo'].append(start_time)
+        pyomo_data['End_Time_Pyomo'].append(pyomo_end_times.get(task, 0.0))
+
+    pyomo_df = pd.DataFrame(pyomo_data)
+    pyomo_df.to_csv('model_results.csv', index=False)
     return result.solver.status
 
 # Генерация вывода для веб-интерфейса
@@ -864,7 +1048,7 @@ def plot_worker_utilization_interactive(model, show=True):
 
 # функция для загрузки готовых решений, важно: при загрузке решений необходимо, чтобы данные были подготовлены точно такие же как и данные в решении (задавать в datagen.py)
 def solution_from_file(model):
-    with open('schedule5.json', 'r', encoding='utf-8') as file:
+    with open('schedule_28_10_100.json', 'r', encoding='utf-8') as file:
         data = json.load(file)
     operations = list(jobs_data.keys())
     print(operations)
@@ -873,13 +1057,13 @@ def solution_from_file(model):
             print(f'current op index {operation[1]-1}')
             current_operation = operations[operation[1]-1]
             model.worker_assigned[current_operation, data.index(machine)+1].set_value(1)
-            model.worker_assigned[current_operation, data.index(machine)+1].fix()
+            # model.worker_assigned[current_operation, data.index(machine)+1].fix()
             print(f'machine {data.index(machine)+1} is set up to operation {current_operation}')
             model.start_time[current_operation].set_value(operation[2])
-            model.start_time[current_operation].fix()
+            # model.start_time[current_operation].fix()
             print(f'start time {operation[2]} fixed')
             model.end_time[current_operation].set_value(operation[3])
-            model.end_time[current_operation].fix()
+            # model.end_time[current_operation].fix()
             print(f'end time {operation[3]} fixed')
     
     return model
