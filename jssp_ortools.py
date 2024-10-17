@@ -4,33 +4,33 @@ import plotly.express as px
 import pandas as pd
 from datetime import datetime, timedelta
 
-data_from = '2023-03-24'   
+# data_from = '2023-03-24'   
 
 def extract_number(s):
     match = re.search(r'\d+$', s)  # ищем одну или более цифр в конце строки
     return str(match.group()) if match else None
 
-with open('controlers.txt', 'r') as file:
-    # Читаем каждую строку файла, удаляем символы перевода строки
-    # и сохраняем строки в список
-    controlers = [line.strip() for line in file]
+# with open('controlers.txt', 'r') as file:
+#     # Читаем каждую строку файла, удаляем символы перевода строки
+#     # и сохраняем строки в список
+#     controlers = [line.strip() for line in file]
 
 
 # Загрузка данных
 # with open(f'data_from_df{data_from}.json', 'r', encoding='utf-8') as file:
 #     data = json.load(file)
 
-with open(f'data30_10_100.json', 'r', encoding='utf-8') as file:
-    data = json.load(file)
+# with open(f'data30_10_100.json', 'r', encoding='utf-8') as file:
+#     data = json.load(file)
 
-workers_data = {int(k): v for k, v in data['Machines'].items()}
-jobs_data = {int(k): v for k, v in data['Operations'].items()}
-project_data = {int(k): v for k, v in data['Jobs'].items()}
+# workers_data = {int(k): v for k, v in data['Machines'].items()}
+# jobs_data = {int(k): v for k, v in data['Operations'].items()}
+# project_data = {int(k): v for k, v in data['Jobs'].items()}
 
-operation_to_project = {}
-for project_id, details in project_data.items():
-    for operation_id in details[0]:  # details[0] содержит список идентификаторов операций
-        operation_to_project[operation_id] = project_id
+# operation_to_project = {}
+# for project_id, details in project_data.items():
+#     for operation_id in details[0]:  # details[0] содержит список идентификаторов операций
+#         operation_to_project[operation_id] = project_id
 
 
 from ortools.sat.python import cp_model
@@ -392,10 +392,10 @@ def generate_output(solver, start_time, duration, assignment, total_cost, makesp
 # # Решение модели
 # solver, operation_to_worker = model_solve(model, start_time, assignment, jobs_data.keys(), workers_data.keys(), duration, total_cost)
 
-operation_to_project = {}
-for project_id, details in project_data.items():
-    for operation_id in details[0]:  # details[0] содержит список идентификаторов операций
-        operation_to_project[operation_id] = project_id
+# operation_to_project = {}
+# for project_id, details in project_data.items():
+#     for operation_id in details[0]:  # details[0] содержит список идентификаторов операций
+#         operation_to_project[operation_id] = project_id
 
 
 # plot_gantt_schedule(solver, start_time, duration, operation_to_worker, operation_to_project)
