@@ -4,7 +4,7 @@ import plotly.express as px
 import pandas as pd
 from datetime import datetime, timedelta
 
-# data_from = '2023-03-24'   
+data_from = '2023-03-24'   
 
 def extract_number(s):
     match = re.search(r'\d+$', s)  # ищем одну или более цифр в конце строки
@@ -144,7 +144,7 @@ def create_model(jobs_data, workers_data, project_data, alpha=0.5, beta=0.5):
 
     return model, start_time, assignment, makespan, duration, workers, total_cost
 
-def model_solve(model, start_time, assignment, operations, workers, duration, total_cost, time_to_solve):
+def model_solve(model, start_time, assignment, operations, workers, duration, total_cost, time_to_solve, operation_to_project):
     # Решение модели
     print('Решение модели')
     solver = cp_model.CpSolver()
@@ -169,6 +169,7 @@ def model_solve(model, start_time, assignment, operations, workers, duration, to
         # print('Количество решений:', solution_printer.SolutionCount())
         print(f'Решение было найдено за {solver.WallTime()} секунд')
         operation_to_worker = {o: w for o in operations for w in workers if solver.Value(assignment[(o, w)])}
+        
         if check_all_constraints(solver, model, status):
             print("Все ограничения модели соблюдены.")
             if check_projects_no_overlap(solver, start_time, duration, operation_to_project):
@@ -391,11 +392,6 @@ def generate_output(solver, start_time, duration, assignment, total_cost, makesp
 
 # # Решение модели
 # solver, operation_to_worker = model_solve(model, start_time, assignment, jobs_data.keys(), workers_data.keys(), duration, total_cost)
-
-# operation_to_project = {}
-# for project_id, details in project_data.items():
-#     for operation_id in details[0]:  # details[0] содержит список идентификаторов операций
-#         operation_to_project[operation_id] = project_id
 
 
 # plot_gantt_schedule(solver, start_time, duration, operation_to_worker, operation_to_project)

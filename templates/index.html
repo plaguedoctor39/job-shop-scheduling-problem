@@ -8,7 +8,7 @@
 <body class="container mt-4">
 
     <h1 class="mb-4">Конструктор Модели Планирования Заданий</h1>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         <div class="form-group">
             <label for="param1">Вес общего времени выполнения:</label>
             <input type="text" class="form-control" id="param1" name="param1" required>
@@ -17,12 +17,17 @@
             <label for="param2">Вес затрат:</label>
             <input type="text" class="form-control" id="param2" name="param2" required>
         </div>
-        <div class="form-group"></div>
+        <div class="form-group">
             <label for="param3">Время на поиск решения</label>
             <input type="text" class="form-control" id="param3" name="param3" required>
         </div>
+    
+        <div class="form-group">
+            <label for="datafile">Загрузите файл данных:</label>
+            <input type="file" name="datafile" accept=".json" required>
+        </div>
         <input type="submit" class="btn btn-primary" value="Решить">
-    </form>
+    </form>    
 
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
